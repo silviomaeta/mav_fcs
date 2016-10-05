@@ -1,0 +1,93 @@
+<!-- -->
+<launch>
+
+<!-- set this to true when running the DJI PC simulator -->
+<arg name="simulation" default="true"/>
+
+<arg name="traj_header_frame_id" default="world"/>
+<arg name="traj_child_frame_id" default="pose_estimation"/>
+
+<arg name="dji_header_frame_id" default="dji_world"/>
+<arg name="dji_child_frame_id" default="dji_estimate"/>
+<arg name="ideal_dji_child_frame_id" default="dji"/>
+
+<arg name="imu_world_frame_id" default="imu_world"/>
+<arg name="imu_frame_id"       default="imu"/>
+
+<arg name="utm_zone"                default="17"/>
+<arg name="is_northern_hemisphere"  default="true"/>
+
+<arg name="initial_x"       default="0.0"/>
+<arg name="initial_y"       default="0.0"/>
+<arg name="initial_z"       default="0.0"/>
+<arg name="initial_yaw"     default="0.0"/>
+
+<arg name="home_latitude"  default="0.0"/>
+<arg name="home_longitude" default="0.0"/>
+<arg name="home_altitude"  default="0.0"/>
+
+<!-- configurable speed limits -->
+<arg name="max_horiz_veloc"  default="1.0"/>
+<arg name="max_horiz_accel"  default="0.2"/>
+<arg name="max_vert_veloc"  default="0.25"/>
+<arg name="max_vert_accel"  default="0.05"/>
+
+<remap from="/fcs/odometry" to="/fcs/pose_estimation"/>
+
+<node name="fcs"
+      pkg="mav_fcs" type="mav_fcs_simulator" output="screen">
+      
+  <!-- param name="update_rate"     value="100.0"/ -->
+  <param name="simulation" value="$(arg simulation)"/>
+
+  <param name="traj_header_frame_id" value="$(arg traj_header_frame_id)"/>
+  <param name="traj_child_frame_id" value="$(arg traj_child_frame_id)"/>
+  <param name="dji_header_frame_id" value="$(arg dji_header_frame_id)"/>
+  <param name="dji_child_frame_id" value="$(arg dji_child_frame_id)"/>
+  <param name="ideal_dji_child_frame_id" value="$(arg ideal_dji_child_frame_id)"/>
+  <param name="imu_world_frame_id" value="$(arg imu_world_frame_id)"/>
+  <param name="imu_frame_id" value="$(arg imu_frame_id)"/>
+
+  <param name="utm_zone" value="$(arg utm_zone)"/>
+  <param name="is_northern_hemisphere" value="$(arg is_northern_hemisphere)"/>
+
+  <param name="initial_x" value="$(arg initial_x)"/>
+  <param name="initial_y" value="$(arg initial_y)"/>
+  <param name="initial_z" value="$(arg initial_z)"/>
+  <param name="initial_yaw" value="$(arg initial_yaw)"/>
+  <param name="home_latitude" value="$(arg home_latitude)"/>
+  <param name="home_longitude" value="$(arg home_longitude)"/>
+  <param name="home_altitude" value="$(arg home_altitude)"/>
+  
+  <!-- path tracking control parameters -->
+  <param name="cross_track_P" type="double" value="0.50" /> <!-- 0.40 -->
+  <param name="cross_track_I" type="double" value="0.10" /> <!-- 0.06 -->
+  <param name="cross_track_D" type="double" value="0.001" />
+  <param name="cross_track_IMax" type="double" value="1.5" />
+
+  <param name="cross_track_PZ" type="double" value="0.5" />
+  <param name="cross_track_DZ" type="double" value="0.01" />
+
+  <param name="loop_rate" type="double" value="50.0" />  
+  <param name="max_speed" type="double" value="$(arg max_horiz_veloc)" />
+  <param name="look_ahead_time" type="double" value="$(arg max_horiz_veloc)" />
+  <param name="look_ahead_angle" type="double" value="0.7" />
+  <param name="tracking_threshold" type="double" value="10.0" />
+  <param name="deccel_max" type="double" value="$(arg max_horiz_accel)" />
+  <param name="reaction_time" type="double" value="1.15" />
+
+  <param name="land_capture_radius" type="double" value="1.5" />
+
+  <!-- speed control parameters -->
+  <param name="max_horiz_speed" type="double" value="$(arg max_horiz_veloc)" />  
+  <param name="horiz_accel_limit" type="double" value="$(arg max_horiz_accel)" />  
+
+  <param name="max_vert_speed" type="double" value="$(arg max_vert_veloc)" />  
+  <param name="vert_accel_limit" type="double" value="$(arg max_vert_accel)" />  
+
+  <param name="max_yaw_rate" type="double" value="0.78" />  
+
+</node>
+
+</launch>
+

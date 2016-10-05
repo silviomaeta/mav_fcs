@@ -1,0 +1,16 @@
+<!-- Owner: silvio -->
+<launch>
+
+  <!--Let the user select the direction-->
+  <arg name="direction"
+       range="east,north,north_east,north_west,south,south_east,south_west,west"
+       default="east"/>
+    
+  <!-- Publish static trajectory -->
+  <node name="pubStaticTraj" pkg="optnav_fcs" type="uploadTrajCmd.sh" args="$(find optnav_fcs)/test_files/traj_cmd_$(arg direction).bagy" >
+    <param name="not_required" value="true"/>
+    <param name="no_check_in" value="true"/>
+  </node>
+
+</launch>
+

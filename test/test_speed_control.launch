@@ -1,0 +1,19 @@
+<!-- -->
+<launch>
+
+<node name="test_speed_control"
+      pkg="optnav_fcs" type="test_speed_control" output="screen">
+      
+  <!-- speed control parameters -->
+  <param name="max_horiz_speed" type="double" value="1.0" />  
+  <param name="horiz_accel_limit" type="double" value="0.25" />  
+
+  <param name="max_vert_speed" type="double" value="0.2" />  
+  <param name="vert_accel_limit" type="double" value="0.05" />  
+
+  <param name="max_yaw_rate" type="double" value="0.78" />  
+
+</node>
+
+</launch>
+

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<package>
+  <name>mav_fcs</name>
+  <version>0.0.0</version>
+  <description>The MAV FCS (Micro Air Vehicle - Flight Control System) package</description>
+
+  <maintainer email="smaeta@andrew.cmu.edu">Silvio</maintainer>
+
+  <license>CMU</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>tf</build_depend>
+  <build_depend>geom_cast</build_depend>
+  <build_depend>ca_nav_msgs</build_depend>
+  <build_depend>mav_gcs_msgs</build_depend>
+
+  <run_depend>nav_msgs</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>tf</run_depend>
+  <run_depend>geom_cast</run_depend>
+  <run_depend>ca_nav_msgs</run_depend>
+  <run_depend>mav_gcs_msgs</run_depend>
+
+</package>
+
