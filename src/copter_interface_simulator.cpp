@@ -423,6 +423,8 @@ nav_msgs::Odometry CopterInterface::getOdometry(void) {
   //@TODO: investigate why this was crashing the application
   odom.header.stamp = g_drone->odometry.header.stamp;
   odom.header.seq = g_drone->odometry.header.seq;
+  odom.header.frame_id = "/world";
+  odom.child_frame_id = "/drone";
   odom.pose = g_drone->odometry.pose;
   odom.twist = g_drone->odometry.twist;
   //Altitude is Z down - DJI has Z up
