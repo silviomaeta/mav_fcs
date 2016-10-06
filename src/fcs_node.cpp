@@ -34,7 +34,7 @@ void updateCopterInterfaceThread(FcsProcessor *fcsproc)
   ros::Rate rate(update_rate);
   while (ros::ok())
   {
-    ROS_INFO_STREAM_THROTTLE(1.0, "[FCS] Thread loop - update copter interface");
+    //ROS_INFO_STREAM_THROTTLE(1.0, "[FCS] Thread loop - update copter interface");
     //Send commands for DJI onboard control system
     fcsproc->updateCopterInterface();
     rate.sleep();
@@ -126,9 +126,6 @@ int main(int argc, char ** argv)
      
       //Update state machine and copter interface status
       fcsproc.update();
-
-      //Update FCS interface data - get stuff ready to be published
-      //fcsint.update(now);
 
       //------------------------------------------------------------------------
       //Publish data step

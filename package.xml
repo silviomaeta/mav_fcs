@@ -12,19 +12,23 @@
 
   <build_depend>nav_msgs</build_depend>
   <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>tf</build_depend>
   <build_depend>geom_cast</build_depend>
   <build_depend>ca_nav_msgs</build_depend>
   <build_depend>mav_gcs_msgs</build_depend>
+  <build_depend>dji_sdk</build_depend>
 
   <run_depend>nav_msgs</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>rospy</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>tf</run_depend>
   <run_depend>geom_cast</run_depend>
   <run_depend>ca_nav_msgs</run_depend>
   <run_depend>mav_gcs_msgs</run_depend>
+  <run_depend>dji_sdk</run_depend>
 
 </package>
 

@@ -145,93 +145,37 @@ void FcsProcessor::update(void)
   //Update odometry that will be published by FCS Interface
   _fcs_interface->setFcsOdometry(_copter_interface->getOdometry());
 
-  if ((_copter_interface->getFlightState() == FlightState::ON_GROUND) ||
-      (_copter_interface->getFlightState() == FlightState::INVALID)) {
-    //_fcs_interface->setOnGround(true);
-  }
-  else {
-    //_fcs_interface->setOnGround(false);
-  }
-
+  //Update FCS status
   _fcs_interface->setFcsStatus( getFcsStatus() );
 
   //_fcs_interface->setTrajectoryTime( getCurrentTrajectoryTime() );
-
-  /*
-  if (_copter_interface->isEngaged()) _state_machine->engage();
-  else                                _state_machine->disengage();
-
-  FlightState copter_state = _copter_interface->getFlightState();
-  if (copter_state == ON_GROUND) _state_machine->onGround();
-  else                           _state_machine->inAir();
-  */
   
   //Updating received user command
   if (_fcs_interface->hasUserCmd()) {
     _user_cmd = _fcs_interface->getUserCmd().user_cmd;
   }
 
-
-  //----------------------------------------------------------------------------
-  //Handle OnGround state actions
-  if (_state_machine->getCurrentState() == SM_ONGROUND) {
-    if (_has_valid_traj) {
-      //if (_command_spline_type == small_copter_msgs::Command::TAKEOFF) {
-        _state_machine->takeOffCommanded();
-      //}
-    }
-  }
-
-  //----------------------------------------------------------------------------
-  //Handle TakingOff state actions
-  if (_state_machine->getCurrentState() == SM_TAKINGOFF) {
-    if (_has_valid_traj) {
-      //if (_command_spline_type == small_copter_msgs::Command::SPLINE) {
-        _state_machine->takeOffCompleted();
-        _state_machine->trajectoryCommanded();
-      //}
-    }
-  }
-
-  //----------------------------------------------------------------------------
-  //Handle ExecutingCommand state actions
-  if (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND) {
-    if (_has_valid_traj) {
-      //if (_command_spline_type == small_copter_msgs::Command::LAND) {
-      //  _state_machine->trajectoryCompleted();
-      //  _state_machine->landingCommanded();
-      //}
-      //else 
-      if (_traj_completed) {
-        _state_machine->trajectoryCompleted();
-      }
-    }
-    else {
-    }
-  }
-
-  //----------------------------------------------------------------------------
-  //Handle Landing state actions
-  if (_state_machine->getCurrentState() == SM_LANDING) {
-    if (_has_valid_traj) {
-      if (_traj_completed) {
-        _state_machine->landingCompleted();
-      }
-    }
-  }
-
-  //----------------------------------------------------------------------------
-  //Handle Hover state actions
-  if (_state_machine->getCurrentState() == SM_HOVER) {
-    if (_has_valid_traj) {
-      //if (_command_spline_type == small_copter_msgs::Command::SPLINE) {
-        _state_machine->trajectoryCommanded();
-      //}
-    }
-  }
-
   _state_machine->update();
-  
+
+  //Show state machine status
+  if (_state_machine->getCurrentState() == SM_ONGROUND) {
+    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_ONGROUND");
+  }
+  else if (_state_machine->getCurrentState() == SM_TAKINGOFF) {
+    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_TAKINGOFF");
+  }
+  else if (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND) {
+    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_EXECUTINGCOMMAND");
+  }
+  else if (_state_machine->getCurrentState() == SM_LANDING) {
+    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_LANDING");
+  }
+  else if (_state_machine->getCurrentState() == SM_HOVER) {
+    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_HOVER");
+  }
+  else {
+    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] UNKNOWN");
+  }
 }
 
 
@@ -244,6 +188,16 @@ void FcsProcessor::updateCopterInterface(void) {
   }
 
 
+  //Update state machine - engaged state or not
+  if (_copter_interface->isEngaged()) _state_machine->engage();
+  else                                _state_machine->disengage();
+
+  //Update state machine - aircraft ON_GROUND ro IN_AIR
+  FlightState copter_state = _copter_interface->getFlightState();
+  if (copter_state == ON_GROUND) _state_machine->onGround();
+  else                           _state_machine->inAir();
+
+
   FlightState state = _copter_interface->getFlightState();
   bool commanded_takeoff = false;
   bool commanded_land = false;
@@ -251,16 +205,15 @@ void FcsProcessor::updateCopterInterface(void) {
     //--------------------------------------------------------------------------
     case ON_GROUND:
       ROS_INFO_STREAM_THROTTLE(1.0, ">>> Copter State: ON_GROUND");
+      
+      //Update copter interface
       if (_user_cmd == mav_gcs_msgs::UserCmd::CMD_TAKEOFF) {
         _copter_interface->takeOff();
         commanded_takeoff = true;
         _user_cmd = mav_gcs_msgs::UserCmd::CMD_NONE;
-
-        if (_state_machine->getCurrentState() == SM_ONGROUND) {
-          _state_machine->takeOffCommanded();
-        }
       }
 
+      //Update state machine
       if (_state_machine->getCurrentState() == SM_LANDING) {
         _state_machine->landingCompleted();
       }
@@ -270,11 +223,17 @@ void FcsProcessor::updateCopterInterface(void) {
     case TAKING_OFF:
       ROS_INFO_STREAM_THROTTLE(1.0, ">>> Copter State: TAKING_OFF");
 
+      //Update state machine
+      if (_state_machine->getCurrentState() == SM_ONGROUND) {
+        _state_machine->takeOffCommanded();
+      }
+
     break;
     //--------------------------------------------------------------------------
     case IN_AIR:
       ROS_INFO_STREAM_THROTTLE(1.0, ">>> Copter State: IN_AIR");
 
+      //Update copter interface
       if (_user_cmd == mav_gcs_msgs::UserCmd::CMD_LAND) {
         _copter_interface->land();
         commanded_land = true;
@@ -290,7 +249,6 @@ void FcsProcessor::updateCopterInterface(void) {
         _user_cmd = mav_gcs_msgs::UserCmd::CMD_NONE;
       }
       
-      
       if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) {
         //generate smooth speed control - use current speed, target speed and vel/acc limits
         nav_msgs::Odometry dji_odometry_msg = _copter_interface->getOdometry();
@@ -305,6 +263,8 @@ void FcsProcessor::updateCopterInterface(void) {
         
         if (isInsideCaptureRadius()) {
           _traj_completed = true;
+          _has_valid_traj = false;
+          _follow_traj = false;
         }
         
       }
@@ -320,18 +280,34 @@ void FcsProcessor::updateCopterInterface(void) {
         _copter_interface->setVelocityCommand(0.0, 0.0, 0.0, yaw);
       }
       
+      //Update state machine
       if (_state_machine->getCurrentState() == SM_TAKINGOFF) {
         _state_machine->takeOffCompleted();
-        _state_machine->trajectoryCommanded();
       }
-    }
-  }
+
+      if (_state_machine->getCurrentState() == SM_HOVER) {
+        if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) {
+          _state_machine->trajectoryCommanded();
+        }
+      }
+      
+      if (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND) {
+        if (_traj_completed) {
+          _state_machine->trajectoryCompleted();
+        }
+      }
+
       
     break;
     //--------------------------------------------------------------------------
     case LANDING:
       ROS_INFO_STREAM_THROTTLE(1.0, ">>> New Copter State: LANDING");
 
+      //Update state machine
+      if ((_state_machine->getCurrentState() == SM_HOVER) ||
+          (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND)) {
+        _state_machine->landingCommanded();
+      }
 
     break;
     //--------------------------------------------------------------------------

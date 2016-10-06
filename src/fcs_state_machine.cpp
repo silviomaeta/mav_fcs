@@ -288,6 +288,7 @@ FcsStateMachine::FcsStateMachine(struct InputFSM *inputdata):
   m_fsm(new FlyingStateMachine()) {
   m_fsm->input = inputdata;
   
+  inputdata->initialState = SM_ONGROUND;
   inputdata->isEngaged = true;
   inputdata->isOnGround = true;
   inputdata->hasTakingOffCommand = false;
