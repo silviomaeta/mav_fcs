@@ -26,7 +26,7 @@
 
 
 <node name="fcs"
-      pkg="mav_fcs" type="mav_fcs" output="screen">
+      pkg="mav_fcs" type="mav_fcs_simulator" output="screen">
       
   <param name="traj_header_frame_id" value="$(arg traj_header_frame_id)"/>
   <param name="traj_child_frame_id" value="$(arg traj_child_frame_id)"/>

@@ -1,13 +1,15 @@
 #ifndef _INSPECT_CTRL_H_
 #define _INSPECT_CTRL_H_
 
+#include <string>
+
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
 //#include "dji_inspect_ctrl/pid_msgs.h"
 //#include "trajectory_control/Command.h"
-#include "queue"
+//#include "queue"
 
 class DjiInspectCtrl {
 public:
@@ -15,7 +17,7 @@ public:
     ~DjiInspectCtrl() {}
 
     // Target pose callback function
-    void target_cb(const geometry_msgs::PoseStamped &msg);
+    //void target_cb(const geometry_msgs::PoseStamped &msg);
 
     void set_target(geometry_msgs::PoseStamped &target);
 
@@ -50,11 +52,12 @@ private:
     //ros::Publisher _pid_msg_pub;
     
     ros::Subscriber _laser_odom_sub;
-    ros::Subscriber _dji_odom_sub;
-    ros::Subscriber _target_pose_sub;
-    ros::Subscriber _target_vel_sub;
+    //ros::Subscriber _dji_odom_sub;
+    //ros::Subscriber _target_pose_sub;
+    //ros::Subscriber _target_vel_sub;
 
     nav_msgs::Odometry _laser_odom;
+    std::string _laser_odom_topic_name;
 
     // rotation/position: t:  target in map frame,
     //                    l:  laser  in map frame

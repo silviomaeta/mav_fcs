@@ -378,7 +378,7 @@ void FcsProcessor::initializeTrajectoryControl(ros::NodeHandle & traj_controller
   _target_capture_radius = 0.50;
   
   _has_pause_point = false;
-  _pause_interval = 4.0;
+  _pause_interval = 8.0;
   _pause_start_time = -1.0;
   
   _max_distance_waypoints = 1.5;

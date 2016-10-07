@@ -55,6 +55,11 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
     if (!nh.getParam("control_freq", _freq)){
         ROS_WARN("inspect_ctrl: can not get control freq param");
     }
+    
+    if (!nh.getParam("laser_odom_topic_name", _laser_odom_topic_name)) {
+        ROS_WARN("inspect_ctrl: can not get laser odom topic name");
+    }
+    
     /*
     if (!nh.getParam("DEBUG", _DEBUG)){
         ROS_ERROR("inspect_ctrl: can not get DEBUG param");
@@ -69,8 +74,8 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
     //_pid_msg_pub = nh.advertise<dji_inspect_ctrl::pid_msgs> ("/dji_inspect_ctrl/pid_msgs", 100);
     
     // Subscribers
-    _laser_odom_sub  = nh.subscribe("/fcs/pose_estimation", 50, &DjiInspectCtrl::laser_odom_cb, this);
-    _target_pose_sub = nh.subscribe("/dji_inspect_ctrl/target_pose", 50, &DjiInspectCtrl::target_cb, this);
+    _laser_odom_sub  = nh.subscribe(_laser_odom_topic_name, 50, &DjiInspectCtrl::laser_odom_cb, this);
+    //_target_pose_sub = nh.subscribe("/dji_inspect_ctrl/target_pose", 50, &DjiInspectCtrl::target_cb, this);
 
     /*
     if(_DEBUG) {
@@ -128,6 +133,7 @@ void DjiInspectCtrl::set_target(geometry_msgs::PoseStamped &target) {
     ROS_INFO_STREAM("Target set: x=" << target.pose.position.x << " / y=" << target.pose.position.y << " / z=" << target.pose.position.z << " / yaw=" << y);
 }
 
+/*
 void DjiInspectCtrl::target_cb(const geometry_msgs::PoseStamped &msg) {
 
     tf::quaternionMsgToTF(msg.pose.orientation, _t_quat);
@@ -147,6 +153,7 @@ void DjiInspectCtrl::target_cb(const geometry_msgs::PoseStamped &msg) {
 
     ROS_INFO_ONCE("Target callback");
 }
+*/
 
 void DjiInspectCtrl::laser_odom_cb(const nav_msgs::Odometry &msg) {
 
