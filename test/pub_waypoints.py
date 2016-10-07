@@ -121,7 +121,7 @@ def main():
     pubPath = rospy.Publisher("/fcs/path", PathXYZVPsi, queue_size=1)
 
     if (sys.argv[1] == "1"):
-        path = getWaypointTarget(1.0, 0.0, -1.5)
+        path = getWaypointTarget(5.0, 5.0, -2.5)
     elif (sys.argv[1] == "2"):
         path = getWaypointTarget(-10.0, 10.0, -3.0)            
     elif (sys.argv[1] == "3"):

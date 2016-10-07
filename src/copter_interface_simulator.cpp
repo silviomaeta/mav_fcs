@@ -406,6 +406,14 @@ int CopterInterface::land(void) {
 }
 
 int CopterInterface::setVelocityCommand(double vx, double vy, double vz, double yawrate) {
+  double roll = vx;
+  double pitch = vy;
+  
+  //roll  - motion in y axis : (+) roll >> (+) y  / (-) roll >> (-) y 
+  //pitch - motion in x axis : (+) pitch >> (-) x / (-) pitch >> (+) x 
+  vx = -1.0 * pitch;
+  vy = roll;
+
   g_drone->attitude_control(vx, vy, vz, yawrate);
   return 0;
 }

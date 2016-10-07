@@ -70,6 +70,13 @@ private:
   std::vector<geometry_msgs::PoseStamped> _waypoints;
   int _waypoint_index;
 
+  bool _has_pause_point;
+  geometry_msgs::PoseStamped _pause_point;
+  double _pause_interval;
+  double _pause_start_time;
+  
+  double _max_distance_waypoints;
+
   DjiInspectCtrl *_inspect_ctrl;
   
   double _target_capture_radius;

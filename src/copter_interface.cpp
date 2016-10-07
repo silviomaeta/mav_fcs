@@ -43,11 +43,11 @@ double rad2deg(double rad) {
 enum PAFSwitch
 {
     /// Copter in Position mode.
-    POSITION = -10000,
+    POSITION = -8000,
     /// Copter in Attitude mode.
     ATTITUDE = 0,
     /// Copter in SDK Control mode.
-    FUNCTION = 10000
+    FUNCTION = 8000
 };
 
 //==============================================================================
@@ -140,7 +140,7 @@ int CopterInterface::land(void) {
 }
 
 int CopterInterface::setVelocityCommand(double vx, double vy, double vz, double yawrate) {
-  g_drone->attitude_control(HORIZ_VEL|VERT_VEL|YAW_RATE|HORIZ_GND|YAW_GND, 
+  g_drone->attitude_control(HORIZ_ATT|VERT_VEL|YAW_RATE|HORIZ_BODY|YAW_BODY, 
                             vx, vy, -vz, yawrate*180.0/M_PI);
   return 0;
 }
@@ -167,21 +167,21 @@ int CopterInterface::getBatteryLevel(void) {
 std::string CopterInterface::getStatusDescriptionStr(void) {
   std::string str;
   str = std::string("[CopterInterface - DJI] Status: ");
-  bool activation = g_drone->activation;
-// rmh 2.3 int control = g_drone->sdk_permission_opened;
+  bool active = g_drone->sdk_permission_opened;
+  // rmh 2.3 int control = g_drone->sdk_permission_opened;
   // New in 3.1. Request API control and check if it was granted
   int control = 1;
-  if (!activation) {
+  if (!active) {
     control = g_drone->request_sdk_permission_control();
   }
-  //ROS_INFO_STREAM("PAF switch=" << g_drone->rc_channels.mode);
+  ROS_INFO_STREAM_THROTTLE(5.0, "[CopterInterface] PAF switch=" << g_drone->rc_channels.mode);
   PAFSwitch paf_switch = (PAFSwitch) g_drone->rc_channels.mode;
-  if ((activation) && (control == 1) && (paf_switch == PAFSwitch::FUNCTION)) {
+  if ((active) && (control == 1) && ((paf_switch == PAFSwitch::FUNCTION) || (paf_switch > 0))) {
     str += std::string(" Engaged /");
   }
   else {
     str += std::string(" Not Engaged (");
-    if (activation != 1) {
+    if (active != 1) {
       str += std::string(" ActivationFailed ");
     }
     if (control != 1) {
