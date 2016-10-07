@@ -114,115 +114,6 @@ public:
     return _fcs_status_msg;
   }
 
-/*
-  void setTrajectory(const small_copter_msgs::Trajectory::ConstPtr traj_msg)
-  {
-    if (_is_simulation)
-    {
-      //@TODO: remove this when using real trajectory publisher (Mission Executive)
-      //Need to set command start time because using topic playback
-      small_copter_msgs::Trajectory::Ptr updated_traj_msg(
-          new small_copter_msgs::Trajectory(*traj_msg));
-      updated_traj_msg->command_start_time = ros::Time::now();
-      _init_traj_time = ros::Time::now();
-      _traj_msg = updated_traj_msg;
-    }
-    else
-    {
-      _init_traj_time = traj_msg->command_start_time;
-      _traj_msg = traj_msg;
-    }
-    _has_traj_msg = true;
-  }
-*/
-/*
-  void setDjiOdometry(const nav_msgs::Odometry::ConstPtr odom_msg)
-  {
-    _dji_odometry_msg = *odom_msg;
-  }
-*/
-/*
-  void setDjiHome(small_copter_msgs::LatLongAlt home_msg)
-  {
-    _dji_home_msg = home_msg;
-  }
-
-  void setDjiGlobalPosition(small_copter_msgs::LatLongAlt global_pos_msg)
-  {
-    _dji_global_pose_msg = global_pos_msg;
-  }
-
-  void updateDjiOdometry(nav_msgs::Odometry odom_msg);
-
-  small_copter_msgs::Trajectory::ConstPtr getTrajectory()
-  {
-    return _traj_msg;
-  }
-
-  double getCommandTime(const ros::Time & stamp)
-  {
-    NEA::small_copter_interface::Trajectory traj(*_traj_msg);
-    return traj.relativeTime(stamp, 0.0);
-  }
-
-  ros::Time getTrajectoryInitTime(void)
-  {
-    return _init_traj_time;
-  }
-
-  void update(const ros::Time & stamp);
-
-
-  small_copter_msgs::FCSStatus getStatus() const
-  {
-    return _status_msg;
-  }
-
-  nav_msgs::Odometry getDjiOdometry() const
-  {
-    return _dji_odometry_msg;
-  }
-
-  small_copter_msgs::LatLongAlt getDjiHome() const
-  {
-    return _dji_home_msg;
-  }
-
-  nav_msgs::Odometry getOdometryIns() const
-  {
-    return _ins_odometry_msg;
-  }
-
-  tf::StampedTransform getDjiWorldTransform() const
-  {
-    return _dji_world_tf;
-  }
-
-  tf::StampedTransform getDjiOdometryTransform() const
-  {
-    tf::StampedTransform transform;
-    tf::poseMsgToTF(_dji_odometry_msg.pose.pose, transform);
-    transform.stamp_    = _dji_odometry_msg.header.stamp;
-    transform.frame_id_ = _dji_odometry_msg.header.frame_id;
-    transform.child_frame_id_ = _dji_odometry_msg.child_frame_id;
-    return transform;
-  }
-
-  void setOnGround(bool flag)
-  {
-    _on_ground = flag;
-  }
- 
-  void setEnergyLevel(float level) 
-  {
-    _energy_level = level;
-  }
-
-  void setTrajectoryTime(float t) 
-  {
-    _curr_traj_time = t;
-  }
-*/
 
 private:
   bool _is_simulation;
@@ -244,28 +135,10 @@ private:
 
   mav_gcs_msgs::FCSStatus _fcs_status_msg;
 
-  std::string _traj_header_frame_id;
-  std::string _traj_child_frame_id;
-  std::string _dji_header_frame_id;
-  std::string _dji_child_frame_id;
-  std::string _ideal_dji_child_frame_id;
-  std::string _imu_world_frame_id;
-  std::string _imu_frame_id;
-  //small_copter_msgs::Trajectory::ConstPtr _traj_msg;
-  bool _has_traj_msg;
-  //small_copter_msgs::FCSStatus _status_msg;
-  nav_msgs::Odometry _dji_world_msg;
-  //small_copter_msgs::LatLongAlt _dji_home_msg;
-  //small_copter_msgs::LatLongAlt _dji_global_pose_msg;
-  nav_msgs::Odometry _ins_odometry_msg;
   tf::TransformListener _tf_listener;
   ros::Time _init_traj_time;
   tf::StampedTransform _dji_world_tf;
   tf::TransformerPtr transformer_;
-
-  int _utm_zone;
-  bool _is_northern_hemisphere;
-  //nea_geographic::UTMConfig::Ptr _utm_config;
     
 };
 
