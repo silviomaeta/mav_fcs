@@ -44,7 +44,7 @@ public:
 
   int land(void);
 
-  int setVelocityCommand(double vx, double vy, double vz, double yaw);
+  int setVelocityCommand(double vx, double vy, double vz, double yawrate);
 
   nav_msgs::Odometry getOdometry(void);
 

@@ -98,15 +98,15 @@ int main(int argc, char ** argv)
 
   //----------------------------------------------------------------------------
   //Main loop
-  double update_rate = 10.0;
-  double dt = 1.0/update_rate;
-  fcsproc.setPeriod(dt);
+  //double update_rate = 10.0;
+  //double dt = 1.0/update_rate;
+  //fcsproc.setPeriod(dt);
 
   //Update state machine and copter interface status
   fcsproc.update();
 
-  int counter = 0;
-  ros::Rate rate(100.0);
+  //int counter = 0;
+  ros::Rate rate(50.0);
   while (ros::ok())
   {
     //Spin at 100 Hz to get updated topics
@@ -115,11 +115,11 @@ int main(int argc, char ** argv)
     try
     {
       //Run status update at 20 Hz
-      counter++;
-      if (counter == 5) {
-      counter = 0;
+      //counter++;
+      //if (counter == 5) {
+      //counter = 0;
 
-      ros::Time now = ros::Time::now();
+      //ros::Time now = ros::Time::now();
 
       //------------------------------------------------------------------------
       //Update state step
@@ -134,7 +134,7 @@ int main(int argc, char ** argv)
 
       status_pub.publish(fcsint.getFcsStatus());
             
-      }
+      //}
     }
     catch (const std::exception & ex)
     {

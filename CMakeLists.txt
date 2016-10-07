@@ -40,6 +40,12 @@ add_library(speed_control
 add_dependencies(speed_control ${catkin_EXPORTED_TARGETS})
 target_link_libraries(speed_control ${catkin_LIBRARIES})
 
+add_library(inspect_ctrl
+  src/inspect_ctrl.cpp
+)
+add_dependencies(inspect_ctrl ${catkin_EXPORTED_TARGETS})
+target_link_libraries(inspect_ctrl ${catkin_LIBRARIES})
+
 add_library(fcs_state_machine
   src/fcs_state_machine.cpp
 )
@@ -67,12 +73,12 @@ target_link_libraries(fcs_processor ${catkin_LIBRARIES})
 
 add_executable(mav_fcs src/fcs_node.cpp)
 add_dependencies(mav_fcs ${catkin_EXPORTED_TARGETS})
-target_link_libraries(mav_fcs fcs_processor copter_interface fcs_interface fcs_state_machine path_tracking_control speed_control ${catkin_LIBRARIES})
+target_link_libraries(mav_fcs fcs_processor copter_interface fcs_interface fcs_state_machine inspect_ctrl ${catkin_LIBRARIES})
 
 
 add_executable(mav_fcs_simulator src/fcs_node.cpp)
 add_dependencies(mav_fcs_simulator ${catkin_EXPORTED_TARGETS})
-target_link_libraries(mav_fcs_simulator fcs_processor copter_interface_simulator fcs_interface fcs_state_machine path_tracking_control speed_control ${catkin_LIBRARIES})
+target_link_libraries(mav_fcs_simulator fcs_processor copter_interface_simulator fcs_interface fcs_state_machine inspect_ctrl ${catkin_LIBRARIES})
 
 
 add_executable(test_speed_control test/test_speed_control.cpp)

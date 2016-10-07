@@ -13,17 +13,19 @@
 
 #include <limits>
 #include <math.h>
+#include <vector>
 
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
+#include <geometry_msgs/PoseStamped.h>
 
 #include <ca_nav_msgs/PathXYZVPsi.h>
 
-#include "mav_fcs/path_tracking_control.h"
-#include "mav_fcs/speed_control.h"
+#include "mav_fcs/inspect_ctrl.h"
 #include "mav_fcs/fcs_interface.h"
 #include "mav_fcs/fcs_state_machine.h"
 #include "mav_fcs/copter_interface.h"
+
 
 namespace mavfcs {
 
@@ -33,8 +35,6 @@ public:
   FcsProcessor(ros::NodeHandle & traj_controller_nh, ros::NodeHandle & copter_nh, FcsInterface *fcsint);
 
   ~FcsProcessor(void);
-
-  void setPeriod(double dt) { _period = dt; }
   
   int initialize(void);
 
@@ -53,16 +53,11 @@ private:
   FcsStateMachine *_state_machine;
 
   CopterInterface *_copter_interface;
+
+  mav_gcs_msgs::FCSStatus getFcsStatus(void);
   
   //----------------------------------------------------------------------------
   // Trajectory control parameters and methods
-  double _period;
-  PathTrackingControlParameters  _controller_parameters;
-  PathTrackingControl *_controller;
-  PathTrackingControl::PathTrackingControlState _controller_state;
-
-  //Speed control parameters
-  SpeedControlParameters _speed_control_params;
  
   unsigned int _user_cmd;
   unsigned int _last_event;
@@ -70,33 +65,24 @@ private:
   bool _has_valid_traj;
   bool _follow_traj;
   bool _traj_completed;
-  //bool _has_landing_point;
   Eigen::Vector3d _path_end_point;
-  //small_copter_msgs::Trajectory _curr_traj_msg;
-  //NEA::small_copter_interface::Trajectory *_curr_traj;
-  PathXYZVPsi _wp_path;
-  double _traj_start_time;
-  //int _command_spline_type;
-  //int _command_spline_index;
-  double _waypoint_index;
-  VelAccPsi _speed_cmd;
- 
-  double _spline_sampling_period;
- 
-  // Trajectory control support methods
-  void initializeTrajectoryControl(ros::NodeHandle & traj_controller_nh);
- 
-  void trajectoryUpdate(void);
-  
-  void generateSpeedControlCommand(void);
 
-  bool isInsideCaptureRadius(void);
+  std::vector<geometry_msgs::PoseStamped> _waypoints;
+  int _waypoint_index;
+
+  DjiInspectCtrl *_inspect_ctrl;
+  
+  double _target_capture_radius;
+ 
+  void initializeTrajectoryControl(ros::NodeHandle & traj_controller_nh);
+  
+  void updateWaypointIndex(void);
+  
+  bool isLastWaypoint(void);
 
   void setNewTrajectory(ca_nav_msgs::PathXYZVPsi path);
-  
-  float getCurrentTrajectoryTime(void);
-  
-  mav_gcs_msgs::FCSStatus getFcsStatus(void);
+    
+  void trajectoryUpdate(void);
 
 };
 

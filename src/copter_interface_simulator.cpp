@@ -151,12 +151,8 @@ public:
         //rospy.loginfo("PosZ={0} / VelZ={1}".format(self.pos_z, self.vel_z))
     }
 
-    void updateYaw(double time_step, double yaw) {
-        double cmd_yaw = limit_to_pi(yaw);
+    void updateYaw(double time_step, double yaw_rate) {
         double cmd_yaw_rate = yaw_rate;
-        if ((cmd_yaw - yaw) < 0.0) {
-            cmd_yaw_rate = -1.0 * yaw_rate;
-        }
         double cmd_yaw_accel = (cmd_yaw_rate - yaw_rate) / time_step;
         //Limit yaw acceleration
         cmd_yaw_accel = limit_to_pi(cmd_yaw_accel);
@@ -183,11 +179,11 @@ public:
         //rospy.loginfo("Yaw={0} / YawRate={1}".format(self.yaw, self.yaw_rate))
     }
 
-    void update(double time_step, double vx, double vy, double vz, double cyaw) {
+    void update(double time_step, double vx, double vy, double vz, double cyawrate) {
         //rospy.loginfo("CMD: vx={0} / vy={1} / vz={2} / yaw={3}".format(vx, vy, vz, yaw))
         updateHorizontal(time_step, vx, vy);
         updateVertical(time_step, vz);
-        updateYaw(time_step, cyaw);
+        updateYaw(time_step, cyawrate);
         //ROS_INFO_STREAM_THROTTLE(1.0, "DRONE SIM: Timestep=" << time_step << " / vx=" << vx << " / vy=" << vy << " / vz=" << vz << " / yaw=" << cyaw);
         //ROS_INFO_STREAM_THROTTLE(1.0, "DRONE SIM: Pos x=" << pos_x << " / y=" << pos_y << " / z=" << pos_z << " / yaw=" << yaw);
     }
@@ -203,7 +199,7 @@ public:
     bool activation;
     unsigned int flight_status;
     double prev_time;
-    double cmd_vx, cmd_vy, cmd_vz, cmd_yaw;
+    double cmd_vx, cmd_vy, cmd_vz, cmd_yawrate;
     double takeOffHeight;
     nav_msgs::Odometry odometry;
     double home_latitude, home_longitude, home_altitude;
@@ -214,7 +210,7 @@ public:
         flight_status = ON_GROUND;
         prev_time = -1.0;
         cmd_vx = cmd_vy = cmd_vz = 0.0;
-        cmd_yaw = 0.0;
+        cmd_yawrate = 0.0;
         home_latitude  = latitude  = 40.583401;
         home_longitude = longitude = -79.899775;
         home_altitude  = altitude  = 347.47;
@@ -242,11 +238,11 @@ public:
         }
     }
 
-    void attitude_control(double vx, double vy, double vz, double yaw) {
+    void attitude_control(double vx, double vy, double vz, double yawrate) {
         cmd_vx = vx;
         cmd_vy = vy;
         cmd_vz = vz;
-        cmd_yaw = yaw;
+        cmd_yawrate = yawrate;
     }
 
     void update_position(void) {
@@ -260,7 +256,7 @@ public:
             cmd_vx = 0.0;
             cmd_vy = 0.0;
             cmd_vz = vz;
-            cmd_yaw = pos_sim.yaw;
+            cmd_yawrate = 0.0;
             
             if (fabs(diffHeight) < 0.2) {
                 flight_status = IN_AIR;
@@ -275,7 +271,7 @@ public:
             cmd_vx = 0.0;
             cmd_vy = 0.0;
             cmd_vz = vz;
-            cmd_yaw = pos_sim.yaw;
+            cmd_yawrate = 0.0;
 
             if (fabs(diffHeight) < 0.1) {
                 flight_status = ON_GROUND;
@@ -288,7 +284,7 @@ public:
             cmd_vx = 0.0;
             cmd_vy = 0.0;
             cmd_vz = 0.0;
-            cmd_yaw = pos_sim.yaw;        
+            cmd_yawrate = 0.0;        
         }
 
         //Update position using commands
@@ -300,7 +296,7 @@ public:
         double time_step = curr_time - prev_time;
         prev_time = curr_time;
 
-        pos_sim.update(time_step, cmd_vx, cmd_vy, cmd_vz, cmd_yaw);
+        pos_sim.update(time_step, cmd_vx, cmd_vy, cmd_vz, cmd_yawrate);
 
         //Update odometry information
         odometry.header.stamp = ros::Time::now();
@@ -409,8 +405,8 @@ int CopterInterface::land(void) {
   return 0;
 }
 
-int CopterInterface::setVelocityCommand(double vx, double vy, double vz, double yaw) {
-  g_drone->attitude_control(vx, vy, vz, yaw);
+int CopterInterface::setVelocityCommand(double vx, double vy, double vz, double yawrate) {
+  g_drone->attitude_control(vx, vy, vz, yawrate);
   return 0;
 }
 

@@ -105,7 +105,6 @@ FcsProcessor::FcsProcessor(ros::NodeHandle & traj_controller_nh, ros::NodeHandle
 
 FcsProcessor::~FcsProcessor(void)
 {
-  delete _controller;
   delete _state_machine;
   delete _copter_interface;
   //if (_curr_traj != NULL) delete _curr_traj;
@@ -139,7 +138,7 @@ void FcsProcessor::update(void)
  
   //Update speed control command based on current state
   if (_has_valid_traj && (!_traj_completed)) {
-    generateSpeedControlCommand();
+    //generateSpeedControlCommand();
   }
 
   //Update odometry that will be published by FCS Interface
@@ -232,6 +231,9 @@ void FcsProcessor::updateCopterInterface(void) {
     //--------------------------------------------------------------------------
     case IN_AIR:
       ROS_INFO_STREAM_THROTTLE(1.0, ">>> Copter State: IN_AIR");
+      ROS_INFO_STREAM_THROTTLE(1.0, "has_valid_traj=" << _has_valid_traj);
+      ROS_INFO_STREAM_THROTTLE(1.0, "follow_traj=" << _follow_traj);
+      ROS_INFO_STREAM_THROTTLE(1.0, "traj_completed=" << _traj_completed);
 
       //Update copter interface
       if (_user_cmd == mav_gcs_msgs::UserCmd::CMD_LAND) {
@@ -253,15 +255,20 @@ void FcsProcessor::updateCopterInterface(void) {
         //generate smooth speed control - use current speed, target speed and vel/acc limits
         nav_msgs::Odometry dji_odometry_msg = _copter_interface->getOdometry();
         //ROS_INFO_STREAM_THROTTLE(1.0, "[FcsProcessor] TargetSpeedCmd: vx=" << _speed_cmd.velocity[0] << " / vy=" << _speed_cmd.velocity[1] << " / vz=" << _speed_cmd.velocity[2] << " / yaw=" << _speed_cmd.heading);
-        VelAccPsi cmd = ComputeSpeedControl(_period, dji_odometry_msg, _speed_control_params, _speed_cmd);
-        double vx = cmd.velocity[0];
-        double vy = cmd.velocity[1];
-        double vz = cmd.velocity[2];
-        double yaw = cmd.heading;
-        _copter_interface->setVelocityCommand(vx, vy, vz, yaw);
+        //VelAccPsi cmd = ComputeSpeedControl(_period, dji_odometry_msg, _speed_control_params, _speed_cmd);
+        double vx = 0.0;
+        double vy = 0.0;
+        double vz = 0.0;
+        double yawrate = 0.0;
+        
+        _inspect_ctrl->get_cmd(vx, vy, vz, yawrate);
+        
+        _copter_interface->setVelocityCommand(vx, vy, vz, yawrate);
         //ROS_INFO_STREAM_THROTTLE(1.0, "[FcsProcessor] SpeedCmd: vx=" << vx << " / vy=" << vy << " / vz=" << vz << " / yaw=" << yaw);
         
-        if (isInsideCaptureRadius()) {
+        updateWaypointIndex();
+        
+        if (isLastWaypoint()) {
           _traj_completed = true;
           _has_valid_traj = false;
           _follow_traj = false;
@@ -362,32 +369,16 @@ mav_gcs_msgs::FCSStatus FcsProcessor::getFcsStatus(void) {
 
 void FcsProcessor::initializeTrajectoryControl(ros::NodeHandle & traj_controller_nh) {
   
-  //Set default period as 50Hz
-  _period = 1.0/50.0;
-  
-  // Load parameters
-  if(!_controller_parameters.LoadParameters(traj_controller_nh)) {
-    ROS_ERROR_STREAM("[FcsProcessor] Failed to load path control parameters");
-    return;
-  }
-  // Initialize path tracking control
-  _controller = new PathTrackingControl(_controller_parameters);
-  
-  if (!_speed_control_params.LoadParameters(traj_controller_nh)) {
-    ROS_ERROR_STREAM("[FcsProcessor] Failed to load speed control parameters");
-    return;
-  }
-  
+  _inspect_ctrl = new DjiInspectCtrl(traj_controller_nh);
+
   _has_valid_traj = false;
   _follow_traj = false;
   _traj_completed = false;
 
-  _wp_path = PathXYZVPsi(); 
-  _speed_cmd = VelAccPsi();
+  _waypoints.clear(); 
+  //_speed_cmd = VelAccPsi();
 
-  _traj_start_time = 0.0;
-  _waypoint_index = -1.0;
-  
+  _target_capture_radius = 0.50;
 }
 
 void FcsProcessor::trajectoryUpdate(void) {
@@ -395,10 +386,10 @@ void FcsProcessor::trajectoryUpdate(void) {
   
     setNewTrajectory(_fcs_interface->getPath());
     
-    _controller_state.Reset();
   }
 }
-  
+
+/*
 void FcsProcessor::generateSpeedControlCommand(void) {
 
   bool valid_cmd = false;
@@ -433,15 +424,32 @@ void FcsProcessor::generateSpeedControlCommand(void) {
     ROS_INFO_STREAM_THROTTLE(1.0, "[FcsProcessor] Trajectory completed");
   }
 }
+*/
 
 
-bool FcsProcessor::isInsideCaptureRadius(void) {
+void FcsProcessor::updateWaypointIndex(void) {
+    if (_waypoint_index >= _waypoints.size()) {
+        return;
+    }
     
-    nav_msgs::Odometry curr_pose = _copter_interface->getOdometry();
-    double dx = curr_pose.pose.pose.position.x - _path_end_point[0];
-    double dy = curr_pose.pose.pose.position.y - _path_end_point[1];
-    double dist = sqrt(dx*dx + dy*dy);
-    if (dist < _controller_parameters.land_capture_radius) {
+    //If current position is close to the target then select next waypoint
+    geometry_msgs::PoseStamped target = _waypoints[_waypoint_index];
+    nav_msgs::Odometry curr_pose = _inspect_ctrl->get_odom();
+    double dx = curr_pose.pose.pose.position.x - target.pose.position.x;
+    double dy = curr_pose.pose.pose.position.y - target.pose.position.y;
+    double dz = curr_pose.pose.pose.position.z - target.pose.position.z;
+    double dist = sqrt(dx*dx + dy*dy + dz*dz);
+    ROS_INFO_STREAM_THROTTLE(1.0, "Distance to target[" << _waypoint_index << "] : " << dist << " (dx=" << dx << " / dy=" << dy << ")");
+    if (dist < _target_capture_radius) {
+        _waypoint_index++;
+        if (_waypoint_index < _waypoints.size()) {
+            _inspect_ctrl->set_target(_waypoints[_waypoint_index]);
+        }
+    }
+}
+
+bool FcsProcessor::isLastWaypoint(void) {
+    if (_waypoint_index >= _waypoints.size()) {
         return true;
     }
     return false;
@@ -454,13 +462,7 @@ bool FcsProcessor::isInsideCaptureRadius(void) {
 void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path) {
     ROS_INFO_STREAM("[FcsProcessor] Got new trajectory command.");
 
-    ros::Time now = ros::Time::now();
-
-    _waypoint_index = 0.0;
-    _traj_start_time = now.toSec();
- 
-
-    _wp_path = PathXYZVPsi();
+    _waypoints.clear();
     
 /*    
     //If trajectory is empty, then create an hover point for the copter
@@ -485,30 +487,36 @@ void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path) {
     }
 */
     for (auto wp : path.waypoints) {
-        XYZVPsi xyzvpsi;
-        xyzvpsi.time        = 0.0;
-        xyzvpsi.type        = 0;
-        xyzvpsi.position[0] = wp.position.x;
-        xyzvpsi.position[1] = wp.position.y;
-        xyzvpsi.position[2] = wp.position.z;
-        xyzvpsi.heading     = wp.heading;
-        xyzvpsi.vel         = wp.vel;
-        _wp_path.path.push_back(xyzvpsi);        
+        geometry_msgs::PoseStamped ps;
+
+        tf::Quaternion aux_quat;
+        aux_quat.setRPY(0.0, 0.0, wp.heading);
+        
+        ps.pose.position.x = wp.position.x;
+        ps.pose.position.y = wp.position.y;
+        ps.pose.position.z = wp.position.z;
+        
+        ps.pose.orientation.x = aux_quat[0];
+        ps.pose.orientation.y = aux_quat[1];
+        ps.pose.orientation.z = aux_quat[2];
+        ps.pose.orientation.w = aux_quat[3];
+                
+        _waypoints.push_back(ps);        
     }
         
     _has_valid_traj = true;
     _traj_completed = false;
 
-    int size = _wp_path.path.size();
-    if (size > 1) {
-        XYZVPsi lastPnt = _wp_path.path[size-1];
-        _path_end_point = lastPnt.position;
+    //Set initial target
+    _waypoint_index = 0;
+    if (_waypoints.size() > 0) {
+        _inspect_ctrl->set_target( _waypoints[_waypoint_index] );
     }
     
     return;
 }
 
-
+/*
 float FcsProcessor::getCurrentTrajectoryTime(void) {
     unsigned int index = (unsigned int)floor(_controller_state.closest_idx);  
     unsigned int pathSize = _wp_path.path.size();
@@ -523,5 +531,5 @@ float FcsProcessor::getCurrentTrajectoryTime(void) {
     }
     return 0.0;
 }
-
+*/
 
