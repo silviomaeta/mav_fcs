@@ -3,19 +3,6 @@
 
 <arg name="laser_odom_topic_name" default="/lidar_ekf/imu_odom"/>
 
-<arg name="traj_header_frame_id" default="world"/>
-<arg name="traj_child_frame_id" default="pose_estimation"/>
-
-<arg name="dji_header_frame_id" default="dji_world"/>
-<arg name="dji_child_frame_id" default="dji_estimate"/>
-<arg name="ideal_dji_child_frame_id" default="dji"/>
-
-<arg name="imu_world_frame_id" default="imu_world"/>
-<arg name="imu_frame_id"       default="imu"/>
-
-<arg name="utm_zone"                default="17"/>
-<arg name="is_northern_hemisphere"  default="true"/>
-
 <arg name="initial_x"       default="0.0"/>
 <arg name="initial_y"       default="0.0"/>
 <arg name="initial_z"       default="0.0"/>
@@ -28,17 +15,6 @@
 <node name="fcs"
       pkg="mav_fcs" type="mav_fcs" output="screen">
       
-  <param name="traj_header_frame_id" value="$(arg traj_header_frame_id)"/>
-  <param name="traj_child_frame_id" value="$(arg traj_child_frame_id)"/>
-  <param name="dji_header_frame_id" value="$(arg dji_header_frame_id)"/>
-  <param name="dji_child_frame_id" value="$(arg dji_child_frame_id)"/>
-  <param name="ideal_dji_child_frame_id" value="$(arg ideal_dji_child_frame_id)"/>
-  <param name="imu_world_frame_id" value="$(arg imu_world_frame_id)"/>
-  <param name="imu_frame_id" value="$(arg imu_frame_id)"/>
-
-  <param name="utm_zone" value="$(arg utm_zone)"/>
-  <param name="is_northern_hemisphere" value="$(arg is_northern_hemisphere)"/>
-
   <param name="initial_x" value="$(arg initial_x)"/>
   <param name="initial_y" value="$(arg initial_y)"/>
   <param name="initial_z" value="$(arg initial_z)"/>
