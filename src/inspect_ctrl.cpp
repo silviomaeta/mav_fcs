@@ -173,6 +173,7 @@ void DjiInspectCtrl::laser_odom_cb(const nav_msgs::Odometry &msg) {
     _l_pos.setValue(msg.pose.pose.position.x,msg.pose.pose.position.y,msg.pose.pose.position.z);
     //if(!_USE_DJI_VEL) { 
 	_l_vel.setValue(msg.twist.twist.linear.x,msg.twist.twist.linear.y,msg.twist.twist.linear.z);
+	_l_vel = _l_rot.transpose() * _l_vel;
     //}
     ROS_INFO_STREAM_THROTTLE(1.0, "Laser localization callback");
 

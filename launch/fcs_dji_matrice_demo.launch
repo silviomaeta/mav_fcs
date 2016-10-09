@@ -52,8 +52,8 @@
         <param name="control_freq"      value="50.0" /> # make sure this is the odom freq
         <param name="DEBUG"             value="false" />
         <param name="USE_DJI_VEL"       value="false" /> 
-        <param name="MAX_ROLL"          value="8.0" />  # in degrees
-        <param name="MAX_PITCH"         value="8.0" />  # in degrees
+        <param name="MAX_ROLL"          value="10.0" />  # in degrees
+        <param name="MAX_PITCH"         value="10.0" />  # in degrees
         <param name="MAX_YAW_RATE"      value="10.0" />  # in degree/s
         <param name="MAX_Z_RATE"        value="0.15" />  # in meter/s
         
