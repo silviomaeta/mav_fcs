@@ -33,7 +33,7 @@ public:
     //void target_vel_cb(const geometry_msgs::Point &msg);
 
     // publish cmd
-    //void publish_cmd();
+    void publish_cmd();
     void get_cmd(double &roll, double &pitch, double &vz, double &yawrate);
 
     // Update error
@@ -48,7 +48,7 @@ public:
     void update_time();
     
 private:
-    //ros::Publisher _dji_cmd_pub;
+    ros::Publisher _dji_cmd_pub;
     //ros::Publisher _pid_msg_pub;
     
     ros::Subscriber _laser_odom_sub;

@@ -257,7 +257,7 @@ void FcsProcessor::updateCopterInterface(void) {
         double yawrate;
         
         _inspect_ctrl->get_cmd(roll, pitch, vz, yawrate);
-        //ROS_INFO_STREAM_THROTTLE(1.0, "[FcsProcessor] Cmd: roll=" << roll << " / pitch=" << pitch << " / vz=" << vz << " / yawrate=" << yawrate);
+        //ROS_INFO_STREAM_THROTTLE(0.2, "[FcsProcessor] Cmd: roll=" << roll << " / pitch=" << pitch << " / vz=" << vz << " / yawrate=" << yawrate);
         
         vx = roll;
         vy = pitch;

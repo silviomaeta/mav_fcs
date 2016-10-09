@@ -70,7 +70,7 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
     */
 
     // Command publisher
-    //_dji_cmd_pub = nh.advertise<trajectory_control::Command> ("/trajectory_control/command", 100);
+    _dji_cmd_pub = nh.advertise<geometry_msgs::QuaternionStamped> ("/dji_inspect_ctrl/cmd", 100);
     //_pid_msg_pub = nh.advertise<dji_inspect_ctrl::pid_msgs> ("/dji_inspect_ctrl/pid_msgs", 100);
     
     // Subscribers
@@ -185,7 +185,7 @@ void DjiInspectCtrl::laser_odom_cb(const nav_msgs::Odometry &msg) {
     }
     update_velocity_error();
     update_velocity_control();
-    //publish_cmd();
+    publish_cmd();
 }
 
 /*
@@ -216,25 +216,25 @@ void DjiInspectCtrl::target_vel_cb(const geometry_msgs::Point &msg)
     _pid_msg.velocity.z = _t_vel.z();
 }
 */
-/*
+
 void DjiInspectCtrl::publish_cmd() {
 
     // Publish command convert back to radius
-    trajectory_control::Command cmd;
+    geometry_msgs::QuaternionStamped cmd;
 
     cmd.header.frame_id = "dji";
-    cmd.header.stamp    = ros::Time::now();
-    cmd.headingrate     = _yaw_rate;
-    cmd.velocity.x      = _roll;
-    cmd.velocity.y      = _pitch;
-    cmd.velocity.z      = _z_rate;
+    cmd.header.stamp      = ros::Time::now();
+    cmd.quaternion.w      = _yaw_rate;
+    cmd.quaternion.x      = _roll;
+    cmd.quaternion.y      = _pitch;
+    cmd.quaternion.z      = _z_rate;
 
     _dji_cmd_pub.publish(cmd);
 
     ROS_INFO_ONCE("CMD publish");
 
 }
-*/
+
 
 void DjiInspectCtrl::get_cmd(double &roll, double &pitch, double &vz, double &yawrate) {
     roll    = _roll;
