@@ -73,6 +73,8 @@ private:
   std::vector<geometry_msgs::PoseStamped> _waypoints;
   int _waypoint_index;
 
+  geometry_msgs::PoseStamped _hoverpoint;
+
   bool _has_pause_point;
   geometry_msgs::PoseStamped _pause_point;
   double _pause_interval;

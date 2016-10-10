@@ -130,7 +130,7 @@ void DjiInspectCtrl::set_target(geometry_msgs::PoseStamped &target) {
     _t_rot.setRPY(0.0,0.0,y);
     _t_pos.setValue(target.pose.position.x, target.pose.position.y, target.pose.position.z);
 
-    ROS_INFO_STREAM("Target set: x=" << target.pose.position.x << " / y=" << target.pose.position.y << " / z=" << target.pose.position.z << " / yaw=" << y);
+    ROS_INFO_STREAM_THROTTLE(1.0, "Target set: x=" << target.pose.position.x << " / y=" << target.pose.position.y << " / z=" << target.pose.position.z << " / yaw=" << y);
 }
 
 /*

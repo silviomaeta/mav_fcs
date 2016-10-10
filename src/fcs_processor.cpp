@@ -248,13 +248,16 @@ void FcsProcessor::updateCopterInterface(void) {
         _user_cmd = mav_gcs_msgs::UserCmd::CMD_NONE;
       }
       
-      if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) {
+      //if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) 
+      {
         //generate smooth speed control - use current speed, target speed and vel/acc limits
-        nav_msgs::Odometry dji_odometry_msg = _copter_interface->getOdometry();
+        //nav_msgs::Odometry dji_odometry_msg = _copter_interface->getOdometry();
 
         double roll, pitch;
         double vx, vy, vz;
         double yawrate;
+
+        updateWaypointIndex();
         
         _inspect_ctrl->get_cmd(roll, pitch, vz, yawrate);
         //ROS_INFO_STREAM_THROTTLE(0.2, "[FcsProcessor] Cmd: roll=" << roll << " / pitch=" << pitch << " / vz=" << vz << " / yawrate=" << yawrate);
@@ -263,9 +266,7 @@ void FcsProcessor::updateCopterInterface(void) {
         vy = pitch;
         
         _copter_interface->setVelocityCommand(vx, vy, vz, yawrate);
-        
-        updateWaypointIndex();
-        
+                
         if (isLastWaypoint()) {
           _traj_completed = true;
           _has_valid_traj = false;
@@ -273,7 +274,7 @@ void FcsProcessor::updateCopterInterface(void) {
         }
         
       }
-      else {
+      //else {
         //nav_msgs::Odometry odom = _copter_interface->getOdometry();
         //tf::Quaternion q;
         //q[0] = odom.pose.pose.orientation.x; 
@@ -282,8 +283,8 @@ void FcsProcessor::updateCopterInterface(void) {
         //q[3] = odom.pose.pose.orientation.w; 
         //double roll, pitch, yaw;
         //tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
-        _copter_interface->setVelocityCommand(0.0, 0.0, 0.0, 0.0);
-      }
+      //  _copter_interface->setVelocityCommand(0.0, 0.0, 0.0, 0.0);
+      //}
       
       //Update state machine
       if (_state_machine->getCurrentState() == SM_TAKINGOFF) {
@@ -373,9 +374,21 @@ void FcsProcessor::initializeTrajectoryControl(ros::NodeHandle & traj_controller
   _follow_traj = false;
   _traj_completed = false;
 
-  _waypoints.clear(); 
+  _waypoints.clear();
 
-  _target_capture_radius = 0.50;
+  _hoverpoint.pose.position.x = 0.0;
+  _hoverpoint.pose.position.y = 0.0;
+  _hoverpoint.pose.position.z = -1.2;
+  
+  tf::Quaternion aux_quat;
+  aux_quat.setRPY(0.0, 0.0, 0.0);
+                        
+  _hoverpoint.pose.orientation.x = aux_quat[0];
+  _hoverpoint.pose.orientation.y = aux_quat[1];
+  _hoverpoint.pose.orientation.z = aux_quat[2];
+  _hoverpoint.pose.orientation.w = aux_quat[3];
+  
+  _target_capture_radius = 0.40;
   
   _has_pause_point = false;
   _pause_interval = 8.0;
@@ -395,6 +408,11 @@ void FcsProcessor::trajectoryUpdate(void) {
 
 
 void FcsProcessor::updateWaypointIndex(void) {
+
+    //--------------------------------------------------------------------------
+    if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) {
+    //Has valid trajectory and it is commanded to execute
+
     if (_waypoint_index >= _waypoints.size()) {
         return;
     }
@@ -439,6 +457,15 @@ void FcsProcessor::updateWaypointIndex(void) {
         }
     }
     
+    }
+    //--------------------------------------------------------------------------
+    else {
+    //Does not have trajectory to follow or it is in position hold (hover point)
+    
+    _inspect_ctrl->set_target(_hoverpoint);
+
+    }
+    //--------------------------------------------------------------------------
 }
 
 bool FcsProcessor::isLastWaypoint(void) {
