@@ -141,7 +141,7 @@ int CopterInterface::land(void) {
 
 int CopterInterface::setVelocityCommand(double vx, double vy, double vz, double yawrate) {
   g_drone->attitude_control(HORIZ_ATT|VERT_VEL|YAW_RATE|HORIZ_BODY|YAW_BODY, 
-                            vx, vy, -vz, yawrate*180.0/M_PI);
+                            vx, vy, -vz, yawrate);
   return 0;
 }
 
