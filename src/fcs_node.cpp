@@ -15,6 +15,7 @@
 #include <thread>
 
 #include <nav_msgs/Odometry.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <ros/ros.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
@@ -85,6 +86,8 @@ int main(int argc, char ** argv)
   //Publish FCSStatus
   ros::Publisher status_pub = pnh.advertise<mav_gcs_msgs::FCSStatus>("fcs_status", 10, false);
   
+  //Publish Visualization marker
+  ros::Publisher vis_pub = pnh.advertise<visualization_msgs::MarkerArray>( "visualization_marker", 1, false);
   
   //Initialization of FCS objects
  
@@ -133,7 +136,8 @@ int main(int argc, char ** argv)
       odometry_pub.publish(fcsint.getFcsOdometry());
 
       status_pub.publish(fcsint.getFcsStatus());
-            
+        
+      vis_pub.publish(fcsproc.getPathVisualization());    
       //}
     }
     catch (const std::exception & ex)

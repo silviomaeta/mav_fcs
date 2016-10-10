@@ -449,6 +449,72 @@ bool FcsProcessor::isLastWaypoint(void) {
 }
 
 
+visualization_msgs::MarkerArray FcsProcessor::getPathVisualization(void) {
+    visualization_msgs::MarkerArray wpListVisMsg;
+    
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time();
+    marker.ns = "waypoints";
+    marker.id = 0;
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = 0.0;
+    marker.pose.position.y = 0.0;
+    marker.pose.position.z = 0.0;
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+    marker.scale.x = 0.2;
+    marker.scale.y = 0.2;
+    marker.scale.z = 0.2;
+    marker.color.a = 1.0; // Don't forget to set the alpha!
+    marker.color.r = 0.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    
+    if (_has_valid_traj) {
+    int counter = 1;
+    for (auto wp : _waypoints) {
+        visualization_msgs::Marker aux_marker;
+        aux_marker = marker;
+        aux_marker.id = counter;
+        aux_marker.pose.position.x = wp.pose.position.x;
+        aux_marker.pose.position.y = wp.pose.position.y;
+        aux_marker.pose.position.z = wp.pose.position.z;
+        wpListVisMsg.markers.push_back(aux_marker);
+        //ROS_INFO_STREAM(wp.pose.position);
+        counter++;
+    }
+
+    marker.scale.x = 0.4;
+    marker.scale.y = 0.4;
+    marker.scale.z = 0.4;
+    marker.color.a = 1.0; // Don't forget to set the alpha!
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+
+    if ((_waypoint_index >=0) && (_waypoint_index < _waypoints.size())) {
+        
+        visualization_msgs::Marker aux_marker;
+        aux_marker = marker;
+        aux_marker.id = counter;
+        aux_marker.pose.position.x = _waypoints[_waypoint_index].pose.position.x;
+        aux_marker.pose.position.y = _waypoints[_waypoint_index].pose.position.y;
+        aux_marker.pose.position.z = _waypoints[_waypoint_index].pose.position.z;
+        wpListVisMsg.markers.push_back(aux_marker);
+        //ROS_INFO_STREAM(wp.pose.position);
+        counter++;
+    }
+    
+    }
+    
+    return wpListVisMsg;
+}
+
+
 //==============================================================================
 // Trajectory support methods
 

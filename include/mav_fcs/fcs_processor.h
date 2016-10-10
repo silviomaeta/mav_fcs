@@ -18,6 +18,7 @@
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <visualization_msgs/MarkerArray.h>
 
 #include <ca_nav_msgs/PathXYZVPsi.h>
 
@@ -43,6 +44,8 @@ public:
   void update(void);
   
   void updateCopterInterface(void);
+
+  visualization_msgs::MarkerArray getPathVisualization(void);
 
 private:
   tf::TransformListener _tf_listener;
