@@ -274,15 +274,15 @@ void FcsProcessor::updateCopterInterface(void) {
         
       }
       else {
-        nav_msgs::Odometry odom = _copter_interface->getOdometry();
-        tf::Quaternion q;
-        q[0] = odom.pose.pose.orientation.x; 
-        q[1] = odom.pose.pose.orientation.y; 
-        q[2] = odom.pose.pose.orientation.z; 
-        q[3] = odom.pose.pose.orientation.w; 
-        double roll, pitch, yaw;
-        tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
-        _copter_interface->setVelocityCommand(0.0, 0.0, 0.0, yaw);
+        //nav_msgs::Odometry odom = _copter_interface->getOdometry();
+        //tf::Quaternion q;
+        //q[0] = odom.pose.pose.orientation.x; 
+        //q[1] = odom.pose.pose.orientation.y; 
+        //q[2] = odom.pose.pose.orientation.z; 
+        //q[3] = odom.pose.pose.orientation.w; 
+        //double roll, pitch, yaw;
+        //tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
+        _copter_interface->setVelocityCommand(0.0, 0.0, 0.0, 0.0);
       }
       
       //Update state machine
