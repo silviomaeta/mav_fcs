@@ -320,7 +320,7 @@ void FcsProcessor::updateCopterInterface(void) {
         _state_machine->landingCommanded();
       }
 
-      sendCmdCopter();
+      //sendCmdCopter();
 
     break;
     //--------------------------------------------------------------------------
