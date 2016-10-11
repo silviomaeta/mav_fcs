@@ -71,7 +71,7 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
 
     // Command publisher
     _dji_cmd_pub = nh.advertise<geometry_msgs::QuaternionStamped> ("/dji_inspect_ctrl/cmd", 100);
-    //_pid_msg_pub = nh.advertise<dji_inspect_ctrl::pid_msgs> ("/dji_inspect_ctrl/pid_msgs", 100);
+    _pid_msg_pub = nh.advertise<geometry_msgs::PointStamped> ("/dji_inspect_ctrl/pid_msgs", 100);
     
     // Subscribers
     _laser_odom_sub  = nh.subscribe(_laser_odom_topic_name, 50, &DjiInspectCtrl::laser_odom_cb, this);
@@ -349,6 +349,13 @@ void DjiInspectCtrl::update_position_control()
     _pid_msg.velocity.y = _t_vel.y();
     _pid_msg.velocity.z = _t_vel.z();
 */
+    geometry_msgs::PointStamped pidmsg;
+    pidmsg.header.stamp = ros::Time::now();
+    pidmsg.point.x = _err_pos.z() * _P_POS_Z;
+    pidmsg.point.y = _intg_err_pos.z() * _I_POS_Z;
+    pidmsg.point.z = _t_vel[2];
+
+    _pid_msg_pub.publish(pidmsg);
 }
 
 void DjiInspectCtrl::update_velocity_error()
@@ -423,7 +430,7 @@ void DjiInspectCtrl::update_velocity_control()
     // Just for testing. It looks like there exist saturations for roll, pitch and z rate, so add a feed forward term
     _roll += sgn(_roll) * _FW_ROLL;
     _pitch += sgn(_pitch) * _FW_PITCH;
-    _z_rate += sgn(_z_rate) * _FW_Z_RATE;
+    _z_rate += _FW_Z_RATE;
 
     // Bound max values
     _roll =     (fabs(_roll)     > _MAX_ROLL)     ? sgn(_roll)     * _MAX_ROLL     : _roll;
@@ -438,6 +445,7 @@ void DjiInspectCtrl::update_velocity_control()
     _yaw_rate = (fabs(_yaw_rate) > _MIN_YAW_RATE) ? _yaw_rate : 0.0;
     _z_rate   = (fabs(_z_rate)   > _MIN_Z_RATE)   ? _z_rate   : 0.0;
 
+    //if(sgn(_z_rate) > 0.0) _z_rate *= 0.8;
     // Stacking PID info into messages
 /*    
     _pid_msg.velocity_p.x = -_err_vel.x() * _P_VEL_X;

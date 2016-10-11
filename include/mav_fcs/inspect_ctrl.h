@@ -49,7 +49,7 @@ public:
     
 private:
     ros::Publisher _dji_cmd_pub;
-    //ros::Publisher _pid_msg_pub;
+    ros::Publisher _pid_msg_pub;
     
     ros::Subscriber _laser_odom_sub;
     //ros::Subscriber _dji_odom_sub;

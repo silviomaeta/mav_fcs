@@ -560,6 +560,7 @@ void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path) {
         }
 
         //Added intermediate points if waypoints are far from each other
+        /*
         if (!first) {
             double dx = ps.pose.position.x - prev.pose.position.x;
             double dy = ps.pose.position.y - prev.pose.position.y;
@@ -582,7 +583,8 @@ void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path) {
                 } 
             }
         }
-     
+        */
+        
         _waypoints.push_back(ps);
         prev = ps;
         first = false;
