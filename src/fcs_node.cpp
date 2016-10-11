@@ -108,7 +108,7 @@ int main(int argc, char ** argv)
   //Update state machine and copter interface status
   fcsproc.update();
 
-  //int counter = 0;
+  int counter = 0;
   ros::Rate rate(50.0);
   while (ros::ok())
   {
@@ -133,11 +133,16 @@ int main(int argc, char ** argv)
       //------------------------------------------------------------------------
       //Publish data step
 
+      //Odometry at 50 Hz
       odometry_pub.publish(fcsint.getFcsOdometry());
 
-      status_pub.publish(fcsint.getFcsStatus());
-        
-      vis_pub.publish(fcsproc.getPathVisualization());    
+      counter++;
+      if (counter == 10) {
+        counter = 0;
+        //FCS Status and visualization at 5 Hz
+        status_pub.publish(fcsint.getFcsStatus());
+        vis_pub.publish(fcsproc.getPathVisualization());
+      }
       //}
     }
     catch (const std::exception & ex)

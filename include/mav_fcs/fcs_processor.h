@@ -74,6 +74,10 @@ private:
   int _waypoint_index;
 
   geometry_msgs::PoseStamped _hoverpoint;
+  bool _has_hoverpoint;
+
+  geometry_msgs::PoseStamped _landpoint;
+  bool _has_landpoint;
 
   bool _has_pause_point;
   geometry_msgs::PoseStamped _pause_point;
@@ -95,6 +99,8 @@ private:
   void setNewTrajectory(ca_nav_msgs::PathXYZVPsi path);
     
   void trajectoryUpdate(void);
+  
+  void sendCmdCopter(void);
 
 };
 

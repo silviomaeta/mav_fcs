@@ -224,6 +224,8 @@ void FcsProcessor::updateCopterInterface(void) {
         _state_machine->takeOffCommanded();
       }
 
+      sendCmdCopter();
+
     break;
     //--------------------------------------------------------------------------
     case IN_AIR:
@@ -248,6 +250,8 @@ void FcsProcessor::updateCopterInterface(void) {
         _user_cmd = mav_gcs_msgs::UserCmd::CMD_NONE;
       }
       
+      sendCmdCopter();
+      /*
       //if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) 
       {
         //generate smooth speed control - use current speed, target speed and vel/acc limits
@@ -274,6 +278,7 @@ void FcsProcessor::updateCopterInterface(void) {
         }
         
       }
+      */
       //else {
         //nav_msgs::Odometry odom = _copter_interface->getOdometry();
         //tf::Quaternion q;
@@ -314,6 +319,8 @@ void FcsProcessor::updateCopterInterface(void) {
           (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND)) {
         _state_machine->landingCommanded();
       }
+
+      sendCmdCopter();
 
     break;
     //--------------------------------------------------------------------------
@@ -366,30 +373,93 @@ mav_gcs_msgs::FCSStatus FcsProcessor::getFcsStatus(void) {
 // Trajectory handling methods
 //==============================================================================
 
+
+void FcsProcessor::sendCmdCopter(void) {
+    double roll, pitch;
+    double vx, vy, vz;
+    double yawrate;
+
+    updateWaypointIndex();
+        
+    _inspect_ctrl->get_cmd(roll, pitch, vz, yawrate);
+    //ROS_INFO_STREAM_THROTTLE(0.2, "[FcsProcessor] Cmd: roll=" << roll << " / pitch=" << pitch << " / vz=" << vz << " / yawrate=" << yawrate);
+        
+    vx = roll;
+    vy = pitch;
+
+    FlightState state = _copter_interface->getFlightState();
+    switch (state) {
+    case ON_GROUND:
+    case TAKING_OFF:
+    case LANDING:
+        vz = 0.0;
+        yawrate = 0.0;
+    break;
+    case IN_AIR:
+        //Do not change - keep commands
+    break;
+    default:
+        vz = 0.0;
+        yawrate = 0.0;
+    break;
+    }
+    
+    _copter_interface->setVelocityCommand(vx, vy, vz, yawrate);
+                
+    if (isLastWaypoint()) {
+        _traj_completed = true;
+        _has_valid_traj = false;
+        _follow_traj = false;
+    }
+}
+
+
 void FcsProcessor::initializeTrajectoryControl(ros::NodeHandle & traj_controller_nh) {
   
+  //Set trajectory control
   _inspect_ctrl = new DjiInspectCtrl(traj_controller_nh);
 
+  //No waypoints in the beginning
   _has_valid_traj = false;
   _follow_traj = false;
   _traj_completed = false;
 
   _waypoints.clear();
 
-  _hoverpoint.pose.position.x = 0.0;
-  _hoverpoint.pose.position.y = 0.0;
-  _hoverpoint.pose.position.z = -1.2;
-  
+
   tf::Quaternion aux_quat;
   aux_quat.setRPY(0.0, 0.0, 0.0);
-                        
+
+  //Set hover point 
+  _hoverpoint.pose.position.x = 0.0;
+  _hoverpoint.pose.position.y = 0.0;
+  _hoverpoint.pose.position.z = -1.5;
+                          
   _hoverpoint.pose.orientation.x = aux_quat[0];
   _hoverpoint.pose.orientation.y = aux_quat[1];
   _hoverpoint.pose.orientation.z = aux_quat[2];
   _hoverpoint.pose.orientation.w = aux_quat[3];
   
+  _has_hoverpoint = false;
+  
+
+  //Set land point 
+  _landpoint.pose.position.x = 0.0;
+  _landpoint.pose.position.y = 0.0;
+  _landpoint.pose.position.z = -1.5;
+                          
+  _landpoint.pose.orientation.x = aux_quat[0];
+  _landpoint.pose.orientation.y = aux_quat[1];
+  _landpoint.pose.orientation.z = aux_quat[2];
+  _landpoint.pose.orientation.w = aux_quat[3];
+  
+  _has_landpoint = false;
+  
+  
+  //Target capture radius for waypoints
   _target_capture_radius = 0.40;
   
+  //Pause point control variables
   _has_pause_point = false;
   _pause_interval = 8.0;
   _pause_start_time = -1.0;
@@ -416,6 +486,8 @@ void FcsProcessor::updateWaypointIndex(void) {
     if (_waypoint_index >= _waypoints.size()) {
         return;
     }
+    
+    _has_hoverpoint = false;
     
     //If current position is close to the target then select next waypoint
     geometry_msgs::PoseStamped target = _waypoints[_waypoint_index];
@@ -460,10 +532,28 @@ void FcsProcessor::updateWaypointIndex(void) {
     }
     //--------------------------------------------------------------------------
     else {
-    //Does not have trajectory to follow or it is in position hold (hover point)
     
-    _inspect_ctrl->set_target(_hoverpoint);
-
+    //Does not have trajectory to follow or it is in position hold (hover point)
+    FlightState state = _copter_interface->getFlightState();
+    switch (state) {
+    case ON_GROUND:
+    case LANDING:
+      if (!_has_landpoint) {
+        _inspect_ctrl->set_target(_landpoint);
+        _has_landpoint = true;
+      }
+    break;
+    case TAKING_OFF:
+    case IN_AIR:
+      if (!_has_hoverpoint) {
+        _inspect_ctrl->set_target(_hoverpoint);
+        _has_hoverpoint = true;
+      }
+    break;
+    default:
+    break;
+    }
+        
     }
     //--------------------------------------------------------------------------
 }
