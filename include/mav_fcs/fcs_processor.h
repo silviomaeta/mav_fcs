@@ -52,9 +52,6 @@ private:
 
   FcsInterface *_fcs_interface;
 
-  InputFSM _fsm_data;
-  FcsStateMachine *_state_machine;
-
   CopterInterface *_copter_interface;
 
   mav_gcs_msgs::FCSStatus getFcsStatus(void);

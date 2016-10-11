@@ -93,7 +93,6 @@ void transformXYZYaw(const tf::TransformListener &listener,
 FcsProcessor::FcsProcessor(ros::NodeHandle & traj_controller_nh, ros::NodeHandle & copter_nh, FcsInterface *fcsint)
 {
   _fcs_interface = fcsint;
-  _state_machine = new FcsStateMachine(&_fsm_data);  
   _copter_interface = new CopterInterface(copter_nh);
 
   _user_cmd   = mav_gcs_msgs::UserCmd::CMD_NONE;
@@ -105,7 +104,6 @@ FcsProcessor::FcsProcessor(ros::NodeHandle & traj_controller_nh, ros::NodeHandle
 
 FcsProcessor::~FcsProcessor(void)
 {
-  delete _state_machine;
   delete _copter_interface;
 }
 
@@ -151,27 +149,6 @@ void FcsProcessor::update(void)
     _user_cmd = _fcs_interface->getUserCmd().user_cmd;
   }
 
-  _state_machine->update();
-
-  //Show state machine status
-  if (_state_machine->getCurrentState() == SM_ONGROUND) {
-    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_ONGROUND");
-  }
-  else if (_state_machine->getCurrentState() == SM_TAKINGOFF) {
-    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_TAKINGOFF");
-  }
-  else if (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND) {
-    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_EXECUTINGCOMMAND");
-  }
-  else if (_state_machine->getCurrentState() == SM_LANDING) {
-    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_LANDING");
-  }
-  else if (_state_machine->getCurrentState() == SM_HOVER) {
-    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] SM_HOVER");
-  }
-  else {
-    ROS_INFO_STREAM_THROTTLE(1.0, "[StateMachine] UNKNOWN");
-  }
 }
 
 
@@ -182,17 +159,6 @@ void FcsProcessor::updateCopterInterface(void) {
   if (!_copter_interface->isEngaged())
   {
   }
-
-
-  //Update state machine - engaged state or not
-  if (_copter_interface->isEngaged()) _state_machine->engage();
-  else                                _state_machine->disengage();
-
-  //Update state machine - aircraft ON_GROUND ro IN_AIR
-  FlightState copter_state = _copter_interface->getFlightState();
-  if (copter_state == ON_GROUND) _state_machine->onGround();
-  else                           _state_machine->inAir();
-
 
   FlightState state = _copter_interface->getFlightState();
   bool commanded_takeoff = false;
@@ -209,21 +175,11 @@ void FcsProcessor::updateCopterInterface(void) {
         _user_cmd = mav_gcs_msgs::UserCmd::CMD_NONE;
       }
 
-      //Update state machine
-      if (_state_machine->getCurrentState() == SM_LANDING) {
-        _state_machine->landingCompleted();
-      }
-
     break;
     //--------------------------------------------------------------------------
     case TAKING_OFF:
       ROS_INFO_STREAM_THROTTLE(1.0, ">>> Copter State: TAKING_OFF");
-
-      //Update state machine
-      if (_state_machine->getCurrentState() == SM_ONGROUND) {
-        _state_machine->takeOffCommanded();
-      }
-
+      
       sendCmdCopter();
 
     break;
@@ -251,74 +207,11 @@ void FcsProcessor::updateCopterInterface(void) {
       }
       
       sendCmdCopter();
-      /*
-      //if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) 
-      {
-        //generate smooth speed control - use current speed, target speed and vel/acc limits
-        //nav_msgs::Odometry dji_odometry_msg = _copter_interface->getOdometry();
-
-        double roll, pitch;
-        double vx, vy, vz;
-        double yawrate;
-
-        updateWaypointIndex();
-        
-        _inspect_ctrl->get_cmd(roll, pitch, vz, yawrate);
-        //ROS_INFO_STREAM_THROTTLE(0.2, "[FcsProcessor] Cmd: roll=" << roll << " / pitch=" << pitch << " / vz=" << vz << " / yawrate=" << yawrate);
-        
-        vx = roll;
-        vy = pitch;
-        
-        _copter_interface->setVelocityCommand(vx, vy, vz, yawrate);
-                
-        if (isLastWaypoint()) {
-          _traj_completed = true;
-          _has_valid_traj = false;
-          _follow_traj = false;
-        }
-        
-      }
-      */
-      //else {
-        //nav_msgs::Odometry odom = _copter_interface->getOdometry();
-        //tf::Quaternion q;
-        //q[0] = odom.pose.pose.orientation.x; 
-        //q[1] = odom.pose.pose.orientation.y; 
-        //q[2] = odom.pose.pose.orientation.z; 
-        //q[3] = odom.pose.pose.orientation.w; 
-        //double roll, pitch, yaw;
-        //tf::Matrix3x3(q).getRPY(roll, pitch, yaw);
-      //  _copter_interface->setVelocityCommand(0.0, 0.0, 0.0, 0.0);
-      //}
-      
-      //Update state machine
-      if (_state_machine->getCurrentState() == SM_TAKINGOFF) {
-        _state_machine->takeOffCompleted();
-      }
-
-      if (_state_machine->getCurrentState() == SM_HOVER) {
-        if ((_has_valid_traj) && (_follow_traj) && (!_traj_completed)) {
-          _state_machine->trajectoryCommanded();
-        }
-      }
-      
-      if (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND) {
-        if (_traj_completed) {
-          _state_machine->trajectoryCompleted();
-        }
-      }
-
-      
+            
     break;
     //--------------------------------------------------------------------------
     case LANDING:
       ROS_INFO_STREAM_THROTTLE(1.0, ">>> New Copter State: LANDING");
-
-      //Update state machine
-      if ((_state_machine->getCurrentState() == SM_HOVER) ||
-          (_state_machine->getCurrentState() == SM_EXECUTINGCOMMAND)) {
-        _state_machine->landingCommanded();
-      }
 
       //sendCmdCopter();
 
