@@ -469,7 +469,9 @@ double getDistancePose(geometry_msgs::Point p1, geometry_msgs::Point p2) {
 float FcsProcessor::getTaskExecutionPercentage(void) {
     int num_waypoints = _waypoints.size();
     int next_waypoint = _waypoint_index;
-        
+    
+    if (num_waypoints == 0) return 0.0;
+    
     if (next_waypoint == 0) return 0.0;
     if (next_waypoint >= num_waypoints) return 1.0;
  
