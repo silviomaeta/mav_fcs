@@ -217,6 +217,10 @@ public:
         odometry.header.seq = 0;
     }
 
+    double get_yaw(void) {
+        return pos_sim.yaw;
+    }
+ 
     void release_sdk_permission_control(void) {
         activation = false;
     }
@@ -407,12 +411,14 @@ int CopterInterface::land(void) {
 
 int CopterInterface::setVelocityCommand(double vx, double vy, double vz, double yawrate) {
   double roll = vx;
-  double pitch = vy;
+  double pitch = -1.0*vy;
   
   //roll  - motion in y axis : (+) roll >> (+) y  / (-) roll >> (-) y 
-  //pitch - motion in x axis : (+) pitch >> (-) x / (-) pitch >> (+) x 
-  vx = -1.0 * pitch;
-  vy = roll;
+  //pitch - motion in x axis : (+) pitch >> (-) x / (-) pitch >> (+) x
+  double yaw = g_drone->get_yaw();
+
+  vx = pitch * cos(yaw) - roll  * sin(yaw);
+  vy = roll  * cos(yaw) + pitch * sin(yaw);
 
   g_drone->attitude_control(vx, vy, vz, yawrate);
   return 0;
