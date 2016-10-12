@@ -14,6 +14,7 @@
 #include <atomic>
 #include <thread>
 
+#include <std_msgs/Float32MultiArray.h>
 #include <nav_msgs/Odometry.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <ros/ros.h>
@@ -84,10 +85,13 @@ int main(int argc, char ** argv)
   ros::Publisher odometry_pub = pnh.advertise<nav_msgs::Odometry>("odometry", 10, false);
 
   //Publish FCSStatus
-  ros::Publisher status_pub = pnh.advertise<mav_gcs_msgs::FCSStatus>("fcs_status", 10, false);
+  ros::Publisher fcs_status_pub = pnh.advertise<mav_gcs_msgs::FCSStatus>("fcs_status", 10, false);
+
+  //Publish Task execution status
+  ros::Publisher task_status_pub = pnh.advertise<std_msgs::Float32MultiArray>("task_status", 10, false);
   
   //Publish Visualization marker
-  ros::Publisher vis_pub = pnh.advertise<visualization_msgs::MarkerArray>( "visualization_marker", 1, false);
+  ros::Publisher vis_pub = pnh.advertise<visualization_msgs::MarkerArray>("visualization_marker", 1, false);
   
   //Initialization of FCS objects
  
@@ -140,7 +144,8 @@ int main(int argc, char ** argv)
       if (counter == 10) {
         counter = 0;
         //FCS Status and visualization at 5 Hz
-        status_pub.publish(fcsint.getFcsStatus());
+        fcs_status_pub.publish(fcsint.getFcsStatus());
+        task_status_pub.publish(fcsproc.getTaskExecutionStatus());
         vis_pub.publish(fcsproc.getPathVisualization());
       }
       //}

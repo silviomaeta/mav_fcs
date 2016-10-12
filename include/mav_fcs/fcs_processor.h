@@ -17,6 +17,7 @@
 
 #include <ros/ros.h>
 #include <tf/transform_listener.h>
+#include <std_msgs/Float32MultiArray.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <visualization_msgs/MarkerArray.h>
 
@@ -44,6 +45,8 @@ public:
   void update(void);
   
   void updateCopterInterface(void);
+
+  std_msgs::Float32MultiArray getTaskExecutionStatus(void);
 
   visualization_msgs::MarkerArray getPathVisualization(void);
 
@@ -99,6 +102,8 @@ private:
   
   void sendCmdCopter(void);
 
+  float getTaskExecutionPercentage(void);
+  
 };
 
 }

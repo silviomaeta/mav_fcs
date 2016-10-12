@@ -458,6 +458,51 @@ bool FcsProcessor::isLastWaypoint(void) {
     return false;
 }
 
+double getDistancePose(geometry_msgs::Point p1, geometry_msgs::Point p2) {
+    double dx = p1.x - p2.x;
+    double dy = p1.y - p2.y;
+    double dz = p1.z - p2.z;
+    double dist = sqrt(dx*dx + dy*dy + dz*dz);
+    return dist;
+}
+
+float FcsProcessor::getTaskExecutionPercentage(void) {
+    int num_waypoints = _waypoints.size();
+    int next_waypoint = _waypoint_index;
+        
+    if (next_waypoint == 0) return 0.0;
+    if (next_waypoint >= num_waypoints) return 1.0;
+ 
+    nav_msgs::Odometry curr_pose = _inspect_ctrl->get_odom();
+   
+    float completed = 0.0;
+    float remaining = 0.0;
+    
+    for (int i=0; i<(next_waypoint-1); i++) {
+        completed += getDistancePose(_waypoints[i].pose.position, _waypoints[i+1].pose.position);
+    }
+    completed += getDistancePose(_waypoints[next_waypoint-1].pose.position, curr_pose.pose.pose.position);
+    remaining += getDistancePose(_waypoints[next_waypoint].pose.position, curr_pose.pose.pose.position);
+    for (int i=next_waypoint; i<(num_waypoints-1); i++) {
+        remaining += getDistancePose(_waypoints[i].pose.position, _waypoints[i+1].pose.position);
+    }
+    
+    float total = completed + remaining;
+    
+    return (completed/total);
+}
+
+
+std_msgs::Float32MultiArray FcsProcessor::getTaskExecutionStatus(void) {
+    std_msgs::Float32MultiArray msg;
+    
+    msg.data.push_back((float)_waypoints.size());
+    msg.data.push_back((float)_waypoint_index);
+    msg.data.push_back(getTaskExecutionPercentage());
+    
+    return msg;
+}
+
 
 visualization_msgs::MarkerArray FcsProcessor::getPathVisualization(void) {
     visualization_msgs::MarkerArray wpListVisMsg;
