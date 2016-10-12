@@ -498,6 +498,7 @@ visualization_msgs::MarkerArray FcsProcessor::getPathVisualization(void) {
         counter++;
     }
 
+    marker.ns = "waypoint_index";
     marker.scale.x = 0.4;
     marker.scale.y = 0.4;
     marker.scale.z = 0.4;
@@ -518,6 +519,45 @@ visualization_msgs::MarkerArray FcsProcessor::getPathVisualization(void) {
         //ROS_INFO_STREAM(wp.pose.position);
         counter++;
     }
+
+    marker.ns = "trajectory";
+    marker.type = visualization_msgs::Marker::LINE_LIST;
+    marker.scale.x = 0.1;
+    marker.scale.y = 0.1;
+    marker.scale.z = 0.1;
+    marker.color.a = 1.0; // Don't forget to set the alpha!
+    marker.color.r = 1.0;
+    marker.color.g = 1.0;
+    marker.color.b = 0.0;
+    
+    bool has_prev_wp = false;
+    geometry_msgs::PoseStamped prev_wp;
+    for (auto wp : _waypoints) {
+        if (has_prev_wp) {
+            visualization_msgs::Marker line_marker;
+            line_marker = marker;
+            line_marker.id = counter;
+        
+            geometry_msgs::Point p1, p2;
+            p1.x = prev_wp.pose.position.x;
+            p1.y = prev_wp.pose.position.y;
+            p1.z = prev_wp.pose.position.z;
+
+            p2.x = wp.pose.position.x;
+            p2.y = wp.pose.position.y;
+            p2.z = wp.pose.position.z;
+
+            line_marker.points.push_back(p1);
+            line_marker.points.push_back(p2);
+        
+            wpListVisMsg.markers.push_back(line_marker);
+            //ROS_INFO_STREAM(wp.pose.position);
+            counter++;
+        }
+        prev_wp = wp;
+        has_prev_wp = true;
+    }
+
     
     }
     
