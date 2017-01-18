@@ -99,7 +99,7 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
     _l_pos.setZero();
     _t_vel.setZero();
     _l_vel.setZero();
-    _dji_rot.setIdentity();
+    _d_rot.setIdentity();
 
     _err_pos.setZero();
     _err_pos_prev.setZero();
@@ -115,12 +115,9 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
     _diff_vel_vec_idx = 0;
     _diff_pos_vec_idx = 0;
 
-    _gimbal_roll = 0.0;
-    _gimbal_pitch = 0.0;
-    _gimbal_yaw = 0.0;
-    _gimbal_cmd_r_rate = 0.0;
-    _gimbal_cmd_p_rate = 0.0;
-    _gimbal_cmd_y_rate = 0.0;
+    _g_roll = 0.0;
+    _g_pitch = 0.0;
+    _g_yaw = 0.0;
 
 }
 
@@ -132,12 +129,6 @@ void DjiInspectCtrl::set_target(geometry_msgs::PoseStamped &target) {
     double y, p, r;
     _t_rot.getRPY(r,p,y);
 
-    // Check if roll and pitch is zero, and set gimbal cmd
-    //p = p > M_PI/4.0 ? M_PI/4.0 : p;
-    //p = p < -M_PI/4.0 ? -M_PI/4.0 : p;
-
-    //_gimbal_cmd_p_rate = sgn(p - _gimbal_pitch) * 50.0;
-    //_gimbal_cmd_r_rate = sgn(r - _gimbal_roll) * 50.0;
     /*if (fabs(r) > 0.01 || fabs(p) > 0.01) {
 	y = 0.0;
 
@@ -151,7 +142,6 @@ void DjiInspectCtrl::set_target(geometry_msgs::PoseStamped &target) {
 
     _t_rot.setRPY(0.0,0.0,y);
     _t_pos.setValue(target.pose.position.x, target.pose.position.y, target.pose.position.z);
-    ROS_INFO_STREAM_THROTTLE(1.0, "Target ang: r=" << r << " / p" << p << " / y" << y);
     ROS_INFO_STREAM_THROTTLE(1.0, "Target set: x=" << target.pose.position.x << " / y=" << target.pose.position.y << " / z=" << target.pose.position.z << " / yaw=" << y);
 }
 
@@ -191,14 +181,14 @@ void DjiInspectCtrl::laser_odom_cb(const nav_msgs::Odometry &msg) {
 }
 
 void DjiInspectCtrl::gimbal_ang_cb(const dji_sdk::Gimbal &msg) {
-    _gimbal_roll = double(msg.roll);
-    _gimbal_pitch = double(msg.pitch);
-    _gimbal_yaw = double(msg.yaw);
+    _g_roll = double(msg.roll);
+    _g_pitch = double(msg.pitch);
+    _g_yaw = double(msg.yaw);
 }
 
 void DjiInspectCtrl::dji_odom_cb(const nav_msgs::Odometry &msg) {
-    tf::quaternionMsgToTF(msg.pose.pose.orientation, _dji_quat);
-    _dji_rot.setRotation(_dji_quat);
+    tf::quaternionMsgToTF(msg.pose.pose.orientation, _d_quat);
+    _d_rot.setRotation(_d_quat);
 }
 
 void DjiInspectCtrl::publish_cmd() {
@@ -229,25 +219,28 @@ void DjiInspectCtrl::get_cmd(double &roll, double &pitch, double &vz, double &ya
 }
 
 void DjiInspectCtrl::get_gimbal(double &r_rate, double &p_rate, double &y_rate) {
-   // get_gimbal is called frequently, cmd should be computed from here
-   double t_roll, t_pitch, t_yaw;
-   _t_rot.getRPY(t_roll, t_pitch, t_yaw);
 
-   // Compute gimbal orientation in world frame
-   tf::Quaternion q;
-   q.setRPY(_gimbal_roll, _gimbal_pitch, _gimbal_yaw);
-   tf::Matrix3x3 R;
-   R.setRotation(q);
-   
-   tf::Matrix3x3 g_rot;
-   g_rot = _l_rot * _dji_rot.inverse() * R;
-   double g_roll, g_pitch, g_yaw;
-   g_rot.getRPY(g_roll, g_pitch, g_yaw);
+    // Target roll pitch yaw of gimbal wrt dji world frame
+    double t_roll, t_pitch, t_yaw;
+    tf::Matrix3x3 t_rot_dw;
+    t_rot_dw = _d_rot * _l_rot.inverse() * _t_rot;
+    t_rot_dw.getRPY(t_roll, t_pitch, t_yaw);
 
+    // Check for roll pitch limit
+    t_roll  = t_roll  >  M_PI/4.0 ?  M_PI/4.0 : t_roll;
+    t_roll  = t_roll  < -M_PI/4.0 ? -M_PI/4.0 : t_roll;
+    t_pitch = t_pitch >  M_PI/4.0 ?  M_PI/4.0 : t_pitch;
+    t_pitch = t_pitch < -M_PI/4.0 ? -M_PI/4.0 : t_pitch;
 
-   r_rate = _gimbal_cmd_r_rate;
-   p_rate = _gimbal_cmd_p_rate;
-   y_rate = _gimbal_cmd_y_rate;
+    // handle singularity
+    if (t_yaw - _g_yaw >=  M_PI) t_yaw -= 2.0*M_PI;
+    if (t_yaw - _g_yaw <= -M_PI) t_yaw += 2.0*M_PI;
+
+    r_rate = sgn(t_roll  - _g_roll) *50.0;
+    p_rate = sgn(t_pitch - _g_pitch)*50.0;
+    y_rate = sgn(t_yaw   - _g_yaw)  *50.0;
+    ROS_INFO_STREAM_THROTTLE(1.0, "Gimbal Cmd: r=" << r_rate << " / p" << p_rate << " / y" << y_rate);
+
 }
 
 void DjiInspectCtrl::update_time()

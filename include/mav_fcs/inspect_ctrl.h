@@ -30,7 +30,7 @@ public:
 
     void dji_odom_cb(const nav_msgs::Odometry &msg);
 
-    nav_msgs::Odometry get_odom(void) { return _laser_odom; };
+    nav_msgs::Odometry get_odom(void) { return _laser_odom; }
 
     // DJI odometry callback
     //void dji_odom_cb(const nav_msgs::Odometry &msg);
@@ -68,12 +68,10 @@ private:
 
     // rotation/position: t:  target in map frame,
     //                    l:  laser  in map frame
-    tf::Matrix3x3  _t_rot,  _l_rot;
-    tf::Quaternion _t_quat, _l_quat;
+    tf::Matrix3x3  _t_rot,  _l_rot, _d_rot;
+    tf::Quaternion _t_quat, _l_quat, _d_quat;
     tf::Vector3    _t_pos,  _l_pos;
     tf::Vector3    _t_vel,  _l_vel;
-    tf::Quaternion _dji_quat;
-    tf::Matrix3x3 _dji_rot;
 
     tf::Vector3 _err_pos, _err_pos_prev, _diff_err_pos, _intg_err_pos;
     tf::Vector3 _err_vel, _err_vel_prev, _diff_err_vel, _intg_err_vel;
@@ -115,8 +113,7 @@ private:
     //bool _DEBUG, _USE_DJI_VEL;
     double _YAW_OFFSET;
 
-    double _gimbal_roll, _gimbal_pitch, _gimbal_yaw;
-    double _gimbal_cmd_r_rate, _gimbal_cmd_p_rate, _gimbal_cmd_y_rate;
+    double _g_roll, _g_pitch, _g_yaw;
 };
 
 
