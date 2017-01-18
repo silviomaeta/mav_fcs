@@ -172,6 +172,7 @@ void FcsProcessor::updateCopterInterface(void) {
       if (_user_cmd == mav_gcs_msgs::UserCmd::CMD_TAKEOFF) {
         _copter_interface->takeOff();
         commanded_takeoff = true;
+        //_copter_interface->startVideo();
         _user_cmd = mav_gcs_msgs::UserCmd::CMD_NONE;
       }
 
@@ -194,6 +195,7 @@ void FcsProcessor::updateCopterInterface(void) {
       if (_user_cmd == mav_gcs_msgs::UserCmd::CMD_LAND) {
         _copter_interface->land();
         commanded_land = true;
+        //_copter_interface->stopVideo();
         _user_cmd = mav_gcs_msgs::UserCmd::CMD_NONE;
       }
       else if (_user_cmd == mav_gcs_msgs::UserCmd::CMD_MISSION_START) {
@@ -271,12 +273,14 @@ void FcsProcessor::sendCmdCopter(void) {
     double roll, pitch;
     double vx, vy, vz;
     double yawrate;
+    double r_rate, p_rate, y_rate;
 
     updateWaypointIndex();
         
     _inspect_ctrl->get_cmd(roll, pitch, vz, yawrate);
     //ROS_INFO_STREAM_THROTTLE(0.2, "[FcsProcessor] Cmd: roll=" << roll << " / pitch=" << pitch << " / vz=" << vz << " / yawrate=" << yawrate);
-        
+    _inspect_ctrl->get_gimbal(r_rate, p_rate, y_rate);
+
     vx = roll;
     vy = pitch;
 
@@ -298,7 +302,7 @@ void FcsProcessor::sendCmdCopter(void) {
     }
     
     _copter_interface->setVelocityCommand(vx, vy, vz, yawrate);
-                
+    _copter_interface->setGimbalCommand(r_rate, p_rate, y_rate); 
     if (isLastWaypoint()) {
         _traj_completed = true;
         _has_valid_traj = false;

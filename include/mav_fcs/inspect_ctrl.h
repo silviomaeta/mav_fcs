@@ -7,6 +7,8 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <tf/tf.h>
+#include "dji_sdk/Gimbal.h"
+
 //#include "dji_inspect_ctrl/pid_msgs.h"
 //#include "trajectory_control/Command.h"
 //#include "queue"
@@ -24,6 +26,10 @@ public:
     // Current pose/odometry callback function
     void laser_odom_cb(const nav_msgs::Odometry &msg);
 
+    void gimbal_ang_cb(const dji_sdk::Gimbal &msg);
+
+    void dji_odom_cb(const nav_msgs::Odometry &msg);
+
     nav_msgs::Odometry get_odom(void) { return _laser_odom; };
 
     // DJI odometry callback
@@ -35,7 +41,7 @@ public:
     // publish cmd
     void publish_cmd();
     void get_cmd(double &roll, double &pitch, double &vz, double &yawrate);
-
+    void get_gimbal(double &r_rate, double &p_rate, double &y_rate);
     // Update error
     void update_position_error();
     void update_velocity_error();
@@ -52,7 +58,8 @@ private:
     ros::Publisher _pid_msg_pub;
     
     ros::Subscriber _laser_odom_sub;
-    //ros::Subscriber _dji_odom_sub;
+    ros::Subscriber _gimbal_ang_sub;
+    ros::Subscriber _dji_odom_sub;
     //ros::Subscriber _target_pose_sub;
     //ros::Subscriber _target_vel_sub;
 
@@ -65,6 +72,8 @@ private:
     tf::Quaternion _t_quat, _l_quat;
     tf::Vector3    _t_pos,  _l_pos;
     tf::Vector3    _t_vel,  _l_vel;
+    tf::Quaternion _dji_quat;
+    tf::Matrix3x3 _dji_rot;
 
     tf::Vector3 _err_pos, _err_pos_prev, _diff_err_pos, _intg_err_pos;
     tf::Vector3 _err_vel, _err_vel_prev, _diff_err_vel, _intg_err_vel;
@@ -105,6 +114,9 @@ private:
 
     //bool _DEBUG, _USE_DJI_VEL;
     double _YAW_OFFSET;
+
+    double _gimbal_roll, _gimbal_pitch, _gimbal_yaw;
+    double _gimbal_cmd_r_rate, _gimbal_cmd_p_rate, _gimbal_cmd_y_rate;
 };
 
 

@@ -44,7 +44,13 @@ public:
 
   int land(void);
 
+  int startVideo(void);
+
+  int stopVideo(void);
+
   int setVelocityCommand(double vx, double vy, double vz, double yawrate);
+  
+  int setGimbalCommand(double r_rate, double p_rate, double y_rate);
 
   nav_msgs::Odometry getOdometry(void);
 

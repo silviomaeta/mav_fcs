@@ -10,7 +10,8 @@
 
 #include <limits>
 #include <math.h>
-
+#include <iostream>
+#include <fstream>
 #include <actionlib/server/simple_action_server.h>
 #include <ros/ros.h>
 
@@ -55,6 +56,7 @@ enum PAFSwitch
 
 DJIDrone *g_drone = NULL;
 
+std::ofstream file;
 //==============================================================================
 // Copter interface implementation / DJI Matrice
 // Basic commands (takeoff, land, speed control) and provide status information
@@ -130,18 +132,44 @@ FlightState CopterInterface::getFlightState(void) {
 int CopterInterface::takeOff(void) {
   ROS_INFO_STREAM("[CopterInterface - DJI] TakeOff");
   g_drone->takeoff();
+  ROS_INFO_STREAM("[CopterInterface - DJI] Start Recording Video");
+  g_drone->start_video();
+
+  file.open("/home/ubuntu/dji_ws/src/mav_fcs/video_ts.txt");
+  file << "video start-end timestamp:\t" << std::setprecision(15) << ros::Time::now().toSec();
   return 0;
 }
 
 int CopterInterface::land(void) {
   ROS_INFO_STREAM("[CopterInterface - DJI] Land");
   g_drone->landing();
+  ROS_INFO_STREAM("[CopterInterface - DJI] Stop Recording Video");
+  g_drone->stop_video(); 
+  file << "\t" << std::setprecision(15) << ros::Time::now().toSec() << "\n";
+  file.close();
+  return 0;
+}
+
+int CopterInterface::startVideo(void) {
+  ROS_INFO_STREAM("[CopterInterface - DJI] Start Recording Video");
+  g_drone->start_video();
+  return 0;
+}
+
+int CopterInterface::stopVideo(void) {
+  ROS_INFO_STREAM("[CopterInterface - DJI] Stop Recording Video");
+  g_drone->stop_video();
   return 0;
 }
 
 int CopterInterface::setVelocityCommand(double vx, double vy, double vz, double yawrate) {
   g_drone->attitude_control(HORIZ_ATT|VERT_VEL|YAW_RATE|HORIZ_BODY|YAW_BODY, 
                             vx, vy, -vz, yawrate);
+  return 0;
+}
+
+int CopterInterface::setGimbalCommand(double r_rate, double p_rate, double y_rate) {
+  g_drone->gimbal_speed_control((int)r_rate, (int)p_rate, (int)y_rate);
   return 0;
 }
 

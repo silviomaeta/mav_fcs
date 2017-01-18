@@ -68,7 +68,7 @@ add_library(fcs_processor
   src/fcs_processor.cpp
 )
 add_dependencies(fcs_processor ${catkin_EXPORTED_TARGETS})
-target_link_libraries(fcs_processor ${catkin_LIBRARIES})
+target_link_libraries(fcs_processor ${catkin_LIBRARIES} copter_interface)
 
 
 add_executable(mav_fcs src/fcs_node.cpp)
