@@ -60,34 +60,19 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
         ROS_WARN("inspect_ctrl: can not get laser odom topic name");
     }
     
-    /*
-    if (!nh.getParam("DEBUG", _DEBUG)){
-        ROS_ERROR("inspect_ctrl: can not get DEBUG param");
-    }
-    if (!nh.getParam("USE_DJI_VEL", _USE_DJI_VEL)){
-        ROS_ERROR("inspect_ctrl: can not get USE_DJI_VEL param");
-    }
-    */
 
     // Command publisher
     _dji_cmd_pub = nh.advertise<geometry_msgs::QuaternionStamped> ("/dji_inspect_ctrl/cmd", 100);
     _pid_msg_pub = nh.advertise<geometry_msgs::PointStamped> ("/dji_inspect_ctrl/pid_msgs", 100);
+    _gim_tar_pub = nh.advertise<dji_sdk::Gimbal> ("/dji_inspect_ctrl/gimbal_target", 100);
+    _gim_cmd_pub = nh.advertise<dji_sdk::Gimbal> ("/dji_inspect_ctrl/gimbal_command", 100);
+    _cur_tar_pub = nh.advertise<visualization_msgs::Marker>("/dji_inspect_ctrl/current_target", 100);
     
     // Subscribers
     _laser_odom_sub = nh.subscribe(_laser_odom_topic_name, 50, &DjiInspectCtrl::laser_odom_cb, this);
     _gimbal_ang_sub = nh.subscribe("/dji_sdk/gimbal", 50, &DjiInspectCtrl::gimbal_ang_cb, this);
     _dji_odom_sub = nh.subscribe("/dji_sdk/odometry", 50, &DjiInspectCtrl::dji_odom_cb, this);
     //_target_pose_sub = nh.subscribe("/dji_inspect_ctrl/target_pose", 50, &DjiInspectCtrl::target_cb, this);
-
-    /*
-    if(_DEBUG) {
-        _target_vel_sub = nh.subscribe("/dji_inspect_ctrl/target_vel", 50, &DjiInspectCtrl::target_vel_cb, this);
-    }
-    if(_USE_DJI_VEL) {
-        ROS_WARN("inspect_ctrl: using dji guidance velocity estimation");
-        _dji_odom_sub = nh.subscribe("/dji_sdk/odometry", 50, &DjiInspectCtrl::dji_odom_cb, this);
-    }
-    */
 
     _init_pos_err = true;
     _init_vel_err = true;
@@ -118,34 +103,33 @@ DjiInspectCtrl::DjiInspectCtrl(ros::NodeHandle &nh) {
     _g_roll = 0.0;
     _g_pitch = 0.0;
     _g_yaw = 0.0;
+    _gt_rot.setIdentity();
+    _gt_quat.setRPY(0.0,0.0,0.0);
+    _prev_yaw = 0.0;
+
 
 }
 
 void DjiInspectCtrl::set_target(geometry_msgs::PoseStamped &target) {
     tf::quaternionMsgToTF(target.pose.orientation, _t_quat);
-
+    //_t_quat.setRPY(0.0, -85.0/180.0*M_PI, 0.0);
     _t_rot.setRotation(_t_quat);
+    _gt_rot.setRotation(_t_quat);
+    _gt_quat = _t_quat;
 
     double y, p, r;
     _t_rot.getRPY(r,p,y);
 
-    /*if (fabs(r) > 0.01 || fabs(p) > 0.01) {
-	y = 0.0;
-
-	if (p>0.0) {
-	    ROS_INFO("Inspect Ctrl: Lifting gimbal cam.\n");
-	} else {
-	    ROS_INFO("Inspect Ctrl: Turn down gimbal cam.\n");
-	}
-        //ROS_WARN("Target roll or pitch is not zeros.");
-    }*/
-
+    if (fabs(r) > 85.0/180.0*M_PI || fabs(p) > 85.0/180.0*M_PI ) y = 0.0;//_prev_yaw;
+    
+    _t_quat.setRPY(0.0,0.0,y);
     _t_rot.setRPY(0.0,0.0,y);
     _t_pos.setValue(target.pose.position.x, target.pose.position.y, target.pose.position.z);
+    _prev_yaw = y;
+
+
     ROS_INFO_STREAM_THROTTLE(1.0, "Target set: x=" << target.pose.position.x << " / y=" << target.pose.position.y << " / z=" << target.pose.position.z << " / yaw=" << y);
 }
-
-
 
 void DjiInspectCtrl::laser_odom_cb(const nav_msgs::Odometry &msg) {
 
@@ -163,30 +147,27 @@ void DjiInspectCtrl::laser_odom_cb(const nav_msgs::Odometry &msg) {
     
     //_l_rot.setRotation(_l_quat);
     _l_pos.setValue(msg.pose.pose.position.x,msg.pose.pose.position.y,msg.pose.pose.position.z);
-    //if(!_USE_DJI_VEL) { 
-	_l_vel.setValue(msg.twist.twist.linear.x,msg.twist.twist.linear.y,msg.twist.twist.linear.z);
-	_l_vel = _l_rot.transpose() * _l_vel;
-    //}
-    ROS_INFO_STREAM_THROTTLE(1.0, "Laser localization callback");
-
+    _l_vel.setValue(msg.twist.twist.linear.x,msg.twist.twist.linear.y,msg.twist.twist.linear.z);
+    _l_vel = _l_rot.transpose() * _l_vel;
+    
+    //ROS_INFO_STREAM_THROTTLE(1.0, "Laser localization callback");
     update_time();
-    //if(!_DEBUG) 
-    {
-        update_position_error();
-        update_position_control();
-    }
+    update_position_error();
+    update_position_control();
     update_velocity_error();
     update_velocity_control();
     publish_cmd();
 }
 
 void DjiInspectCtrl::gimbal_ang_cb(const dji_sdk::Gimbal &msg) {
-    _g_roll = double(msg.roll);
-    _g_pitch = double(msg.pitch);
-    _g_yaw = double(msg.yaw);
+    //ROS_INFO_STREAM_THROTTLE(1.0, "Gimbal callback called");
+    _g_roll  = double(msg.roll)*M_PI/180.0;
+    _g_pitch = double(msg.pitch)*M_PI/180.0;
+    _g_yaw   = double(msg.yaw)*M_PI/180.0;
 }
 
 void DjiInspectCtrl::dji_odom_cb(const nav_msgs::Odometry &msg) {
+    //ROS_INFO_STREAM_THROTTLE(1.0, "DJI odometry callback called");
     tf::quaternionMsgToTF(msg.pose.pose.orientation, _d_quat);
     _d_rot.setRotation(_d_quat);
 }
@@ -197,15 +178,40 @@ void DjiInspectCtrl::publish_cmd() {
     geometry_msgs::QuaternionStamped cmd;
 
     cmd.header.frame_id = "dji";
-    cmd.header.stamp      = ros::Time::now();
-    cmd.quaternion.w      = _yaw_rate;
-    cmd.quaternion.x      = _roll;
-    cmd.quaternion.y      = _pitch;
-    cmd.quaternion.z      = _z_rate;
+    cmd.header.stamp = ros::Time::now();
+    cmd.quaternion.w = _yaw_rate;
+    cmd.quaternion.x = _roll;
+    cmd.quaternion.y = _pitch;
+    cmd.quaternion.z = _z_rate;
 
     _dji_cmd_pub.publish(cmd);
 
     ROS_INFO_ONCE("CMD publish");
+
+    visualization_msgs::Marker marker;
+    marker.header.frame_id = "world";
+    marker.header.stamp = ros::Time::now();
+    marker.ns = "target";
+    marker.id = 1;
+    marker.type = visualization_msgs::Marker::ARROW;
+    marker.action = visualization_msgs::Marker::ADD;
+    marker.pose.position.x = _t_pos.x();
+    marker.pose.position.y = _t_pos.y();
+    marker.pose.position.z = _t_pos.z();
+    marker.pose.orientation.x = _gt_quat.x();
+    marker.pose.orientation.y = _gt_quat.y();
+    marker.pose.orientation.z = _gt_quat.z();
+    marker.pose.orientation.w = _gt_quat.w();
+    marker.scale.x = 0.4;
+    marker.scale.y = 0.04;
+    marker.scale.z = 0.04;
+    marker.color.a = 1.0;
+    marker.color.r = 1.0;
+    marker.color.g = 0.0;
+    marker.color.b = 0.0;
+
+    _cur_tar_pub.publish(marker);
+
 
 }
 
@@ -215,32 +221,56 @@ void DjiInspectCtrl::get_cmd(double &roll, double &pitch, double &vz, double &ya
     pitch   = _pitch;
     vz      = _z_rate;
     yawrate =  _yaw_rate;
-    ROS_INFO_STREAM_THROTTLE(1.0, "CMD: roll=" << roll << " / pitch=" << pitch << " / yawrate=" << yawrate << " / vz=" << vz);
 }
 
 void DjiInspectCtrl::get_gimbal(double &r_rate, double &p_rate, double &y_rate) {
 
+    // Fake a target roll pitch yaw for debugging
+    //tf::Quaternion q;
+    //q.setRPY(0.0, 85.0/180.0*M_PI, -0.0/180.0*M_PI);
+    //_gt_rot.setRotation(q);
+
+    double d_roll, d_pitch, d_yaw;
+    _d_rot.getRPY(d_roll, d_pitch, d_yaw);
+
     // Target roll pitch yaw of gimbal wrt dji world frame
     double t_roll, t_pitch, t_yaw;
     tf::Matrix3x3 t_rot_dw;
-    t_rot_dw = _d_rot * _l_rot.inverse() * _t_rot;
+    t_rot_dw = _d_rot * _l_rot.inverse() * _gt_rot;
     t_rot_dw.getRPY(t_roll, t_pitch, t_yaw);
 
+    if (fabs(t_pitch)>30.0/180.0*M_PI) t_yaw = d_yaw;
+
+    dji_sdk::Gimbal tar;
+    tar.roll  = 0.0;//t_roll*180.0/M_PI;
+    tar.pitch = t_pitch*180.0/M_PI;
+    tar.yaw   = t_yaw*180.0/M_PI;
+    _gim_tar_pub.publish(tar);
+
     // Check for roll pitch limit
-    t_roll  = t_roll  >  M_PI/4.0 ?  M_PI/4.0 : t_roll;
-    t_roll  = t_roll  < -M_PI/4.0 ? -M_PI/4.0 : t_roll;
-    t_pitch = t_pitch >  M_PI/4.0 ?  M_PI/4.0 : t_pitch;
-    t_pitch = t_pitch < -M_PI/4.0 ? -M_PI/4.0 : t_pitch;
+    //t_roll  = t_roll  >  M_PI/4.0 ?  M_PI/4.0 : t_roll;
+    //t_roll  = t_roll  < -M_PI/4.0 ? -M_PI/4.0 : t_roll;
+    t_pitch = t_pitch >  30.0/180.0*M_PI ?  30.0/180.0*M_PI : t_pitch;
+    t_pitch = t_pitch < -89.0/180.0*M_PI ? -89.0/180.0*M_PI : t_pitch;
 
     // handle singularity
     if (t_yaw - _g_yaw >=  M_PI) t_yaw -= 2.0*M_PI;
     if (t_yaw - _g_yaw <= -M_PI) t_yaw += 2.0*M_PI;
 
-    r_rate = sgn(t_roll  - _g_roll) *50.0;
-    p_rate = sgn(t_pitch - _g_pitch)*50.0;
-    y_rate = sgn(t_yaw   - _g_yaw)  *50.0;
-    ROS_INFO_STREAM_THROTTLE(1.0, "Gimbal Cmd: r=" << r_rate << " / p" << p_rate << " / y" << y_rate);
+    r_rate = sgn(t_roll  - _g_roll) *0.0;
+    p_rate = sgn(t_pitch - _g_pitch)*100.0;
+    y_rate = sgn(t_yaw   - _g_yaw)  *100.0;
+    
+    // Stabilize command
+    if (fabs(t_roll  - _g_roll)  < 2.0/180.0*M_PI) r_rate = 0.0;
+    if (fabs(t_pitch - _g_pitch) < 2.0/180.0*M_PI) p_rate = 0.0;
+    if (fabs(t_yaw   - _g_yaw)   < 2.0/180.0*M_PI) y_rate = 0.0;
 
+    dji_sdk::Gimbal cmd;
+    cmd.roll  = r_rate;
+    cmd.pitch = p_rate;
+    cmd.yaw   = y_rate;
+    _gim_cmd_pub.publish(cmd);
 }
 
 void DjiInspectCtrl::update_time()

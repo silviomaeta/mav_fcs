@@ -6,6 +6,7 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <visualization_msgs/Marker.h>
 #include <tf/tf.h>
 #include "dji_sdk/Gimbal.h"
 
@@ -56,7 +57,10 @@ public:
 private:
     ros::Publisher _dji_cmd_pub;
     ros::Publisher _pid_msg_pub;
-    
+    ros::Publisher _gim_tar_pub;
+    ros::Publisher _gim_cmd_pub;
+    ros::Publisher _cur_tar_pub;
+
     ros::Subscriber _laser_odom_sub;
     ros::Subscriber _gimbal_ang_sub;
     ros::Subscriber _dji_odom_sub;
@@ -114,6 +118,9 @@ private:
     double _YAW_OFFSET;
 
     double _g_roll, _g_pitch, _g_yaw;
+    tf::Matrix3x3 _gt_rot;
+    tf::Quaternion _gt_quat;
+    double _prev_yaw;
 };
 
 
