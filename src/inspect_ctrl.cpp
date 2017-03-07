@@ -198,10 +198,10 @@ void DjiInspectCtrl::publish_cmd() {
     marker.pose.position.x = _t_pos.x();
     marker.pose.position.y = _t_pos.y();
     marker.pose.position.z = _t_pos.z();
-    marker.pose.orientation.x = _gt_quat.x();
-    marker.pose.orientation.y = _gt_quat.y();
-    marker.pose.orientation.z = _gt_quat.z();
-    marker.pose.orientation.w = _gt_quat.w();
+    marker.pose.orientation.x = _t_quat.x();
+    marker.pose.orientation.y = _t_quat.y();
+    marker.pose.orientation.z = _t_quat.z();
+    marker.pose.orientation.w = _t_quat.w();
     marker.scale.x = 0.4;
     marker.scale.y = 0.04;
     marker.scale.z = 0.04;
@@ -363,7 +363,7 @@ void DjiInspectCtrl::update_position_control()
     if(fabs(_t_vel[2]) > _MAX_VEL_Z) _t_vel[2] = sgn(_t_vel[2]) * _MAX_VEL_Z;
 
     // Stacking info into pid messages for debugging
-/*    
+/*  */  
     _pid_msg.position_p.x = _err_pos.x() * _P_POS_X;
     _pid_msg.position_p.y = _err_pos.y() * _P_POS_Y;
     _pid_msg.position_p.z = _err_pos.z() * _P_POS_Z;
@@ -376,7 +376,7 @@ void DjiInspectCtrl::update_position_control()
     _pid_msg.velocity.x = _t_vel.x();
     _pid_msg.velocity.y = _t_vel.y();
     _pid_msg.velocity.z = _t_vel.z();
-*/
+
     geometry_msgs::PointStamped pidmsg;
     pidmsg.header.stamp = ros::Time::now();
     pidmsg.point.x = _err_pos.z() * _P_POS_Z;
@@ -475,7 +475,7 @@ void DjiInspectCtrl::update_velocity_control()
 
     //if(sgn(_z_rate) > 0.0) _z_rate *= 0.8;
     // Stacking PID info into messages
-/*    
+   
     _pid_msg.velocity_p.x = -_err_vel.x() * _P_VEL_X;
     _pid_msg.velocity_p.y =  _err_vel.y() * _P_VEL_Y;
     _pid_msg.velocity_p.z = 0.0;
@@ -490,7 +490,7 @@ void DjiInspectCtrl::update_velocity_control()
     _pid_msg.velocity.z = _z_rate;
     _pid_msg.header.stamp = ros::Time::now();
     _pid_msg_pub.publish(_pid_msg);
-*/
+/* */
 }
 
 

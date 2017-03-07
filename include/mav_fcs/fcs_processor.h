@@ -89,14 +89,15 @@ private:
   DjiInspectCtrl *_inspect_ctrl;
   
   double _target_capture_radius;
- 
+  double _target_capture_quatdiff;
+
   void initializeTrajectoryControl(ros::NodeHandle & traj_controller_nh);
   
   void updateWaypointIndex(void);
   
   bool isLastWaypoint(void);
 
-  void setNewTrajectory(ca_nav_msgs::PathXYZVPsi path);
+  void setNewTrajectory(ca_nav_msgs::PathXYZVPsi path, geometry_msgs::PoseArray wps);
     
   void trajectoryUpdate(void);
   

@@ -44,11 +44,11 @@ double rad2deg(double rad) {
 enum PAFSwitch
 {
     /// Copter in Position mode.
-    POSITION = -8000,
+    POSITION = -10000,
     /// Copter in Attitude mode.
     ATTITUDE = 0,
     /// Copter in SDK Control mode.
-    FUNCTION = 8000
+    FUNCTION = 10000
 };
 
 //==============================================================================
@@ -56,7 +56,7 @@ enum PAFSwitch
 
 DJIDrone *g_drone = NULL;
 
-std::ofstream file;
+//std::ofstream file;
 //==============================================================================
 // Copter interface implementation / DJI Matrice
 // Basic commands (takeoff, land, speed control) and provide status information
@@ -96,7 +96,7 @@ void CopterInterface::terminate(void) {
 }
 
 bool CopterInterface::isEngaged(void) {
-  bool activation = g_drone->activation;
+  bool activation = _is_initialized;
 // rmh 2.3 bool control = g_drone->sdk_permission_opened;
   // New in 3.1. Request API control and check if it was granted
   int control = 1;
@@ -106,12 +106,14 @@ bool CopterInterface::isEngaged(void) {
   PAFSwitch paf_switch = (PAFSwitch) g_drone->rc_channels.mode;
   if (activation) {
     if (control) {
+      //ROS_INFO_STREAM("Initialized and Got control");
       if (paf_switch == PAFSwitch::FUNCTION) {
         return true;
       }
     }
   } 
   return false;
+  
 }
 
 FlightState CopterInterface::getFlightState(void) {
@@ -132,21 +134,21 @@ FlightState CopterInterface::getFlightState(void) {
 int CopterInterface::takeOff(void) {
   ROS_INFO_STREAM("[CopterInterface - DJI] TakeOff");
   g_drone->takeoff();
-  ROS_INFO_STREAM("[CopterInterface - DJI] Start Recording Video");
-  g_drone->start_video();
+  //ROS_INFO_STREAM("[CopterInterface - DJI] Start Recording Video");
+  //g_drone->start_video();
 
-  file.open("/home/ubuntu/dji_ws/src/mav_fcs/video_ts.txt");
-  file << "video start-end timestamp:\t" << std::setprecision(15) << ros::Time::now().toSec();
+  //file.open("/home/ubuntu/dji_ws/src/mav_fcs/video_ts.txt");
+  //file << "video start-end timestamp:\t" << std::setprecision(15) << ros::Time::now().toSec();
   return 0;
 }
 
 int CopterInterface::land(void) {
   ROS_INFO_STREAM("[CopterInterface - DJI] Land");
   g_drone->landing();
-  ROS_INFO_STREAM("[CopterInterface - DJI] Stop Recording Video");
-  g_drone->stop_video(); 
-  file << "\t" << std::setprecision(15) << ros::Time::now().toSec() << "\n";
-  file.close();
+  //ROS_INFO_STREAM("[CopterInterface - DJI] Stop Recording Video");
+  //g_drone->stop_video(); 
+  //file << "\t" << std::setprecision(15) << ros::Time::now().toSec() << "\n";
+  //file.close();
   return 0;
 }
 
@@ -195,7 +197,8 @@ int CopterInterface::getBatteryLevel(void) {
 std::string CopterInterface::getStatusDescriptionStr(void) {
   std::string str;
   str = std::string("[CopterInterface - DJI] Status: ");
-  bool active = g_drone->sdk_permission_opened;
+  
+  bool active = _is_initialized;
   // rmh 2.3 int control = g_drone->sdk_permission_opened;
   // New in 3.1. Request API control and check if it was granted
   int control = 1;
@@ -220,6 +223,24 @@ std::string CopterInterface::getStatusDescriptionStr(void) {
     }
     str += std::string(") / ");
   } 
+  
+  /*int control = g_drone->request_sdk_permission_control();
+
+  ROS_INFO_STREAM_THROTTLE(5.0, "[CopterInterface] PAF switch=" << g_drone->rc_channels.mode);
+  PAFSwitch paf_switch = (PAFSwitch) g_drone->rc_channels.mode;
+  if ((control == 1) && ((paf_switch == PAFSwitch::FUNCTION) || (paf_switch > 0))) {
+    str += std::string(" Engaged /");
+  }
+  else {
+    str += std::string(" Not Engaged (");
+    if (control != 1) {
+      str += std::string(" NoControl ");
+    }
+    if (paf_switch != PAFSwitch::FUNCTION) {
+      str += std::string(" SwitchNotInFunctionMode ");
+    }
+    str += std::string(") / ");
+  } */
   
   int state = g_drone->flight_status;
   switch (state) {

@@ -355,7 +355,7 @@ void FcsProcessor::initializeTrajectoryControl(ros::NodeHandle & traj_controller
   
   //Target capture radius for waypoints
   _target_capture_radius = 0.40;
-  
+  _target_capture_quatdiff = 20.0/180.0*M_PI;
   //Pause point control variables
   _has_pause_point = false;
   _pause_interval = 8.0;
@@ -366,9 +366,9 @@ void FcsProcessor::initializeTrajectoryControl(ros::NodeHandle & traj_controller
 }
 
 void FcsProcessor::trajectoryUpdate(void) {
-  if (_fcs_interface->hasPath()) {
+  if (_fcs_interface->hasPath() && _fcs_interface->hasWaypoints()) {
   
-    setNewTrajectory(_fcs_interface->getPath());
+    setNewTrajectory(_fcs_interface->getPath(), _fcs_interface->getWaypoints());
     
   }
 }
@@ -389,12 +389,25 @@ void FcsProcessor::updateWaypointIndex(void) {
     //If current position is close to the target then select next waypoint
     geometry_msgs::PoseStamped target = _waypoints[_waypoint_index];
     nav_msgs::Odometry curr_pose = _inspect_ctrl->get_odom();
+    double tr,tp,ty;
+    double cr,cp,cy;
+    tf::Quaternion tq(target.pose.orientation.x,target.pose.orientation.y,target.pose.orientation.z,target.pose.orientation.w);
+    tf::Quaternion cq(curr_pose.pose.pose.orientation.x,curr_pose.pose.pose.orientation.y,curr_pose.pose.pose.orientation.z,curr_pose.pose.pose.orientation.w);
+    tf::Matrix3x3 tR(tq);
+    tf::Matrix3x3 cR(cq);
+    tR.getRPY(tr,tp,ty);
+    cR.getRPY(cr,cp,cy);
+    if (fabs(tr) > 80.0/180.0*M_PI || fabs(tp) > 80.0/180.0*M_PI) ty = 0.0;
+    if ((ty - cy) >=  M_PI) ty -= 2.0*M_PI;
+    if ((ty - cy) <= -M_PI) ty += 2.0*M_PI;
+
     double dx = curr_pose.pose.pose.position.x - target.pose.position.x;
     double dy = curr_pose.pose.pose.position.y - target.pose.position.y;
     double dz = curr_pose.pose.pose.position.z - target.pose.position.z;
     double dist = sqrt(dx*dx + dy*dy + dz*dz);
+    double dang = fabs(cy-ty);
     ROS_INFO_STREAM_THROTTLE(1.0, "Distance to target[" << _waypoint_index << "] : " << dist << " (dx=" << dx << " / dy=" << dy << ")");
-    if (dist < _target_capture_radius) {
+    if (dist < _target_capture_radius && dang < _target_capture_quatdiff) {
         
         //Check if it is a point it needs to make a pause (wait for some time before updating)
         bool update_index = true;
@@ -619,7 +632,7 @@ visualization_msgs::MarkerArray FcsProcessor::getPathVisualization(void) {
 //==============================================================================
 // Trajectory support methods
 
-void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path) {
+void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path, geometry_msgs::PoseArray wps) {
     ROS_INFO_STREAM("[FcsProcessor] Got new trajectory command.");
 
     _waypoints.clear();
@@ -632,7 +645,7 @@ void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path) {
         geometry_msgs::PoseStamped ps;
 
         tf::Quaternion aux_quat;
-        aux_quat.setRPY(0.0, 0.0, wp.heading);
+        aux_quat.setRPY(0.0, 0.0, wp.heading/180.0*M_PI);
                 
         ps.pose.position.x = wp.position.x;
         ps.pose.position.y = wp.position.y;
@@ -679,6 +692,9 @@ void FcsProcessor::setNewTrajectory(ca_nav_msgs::PathXYZVPsi path) {
         _waypoints.push_back(ps);
         prev = ps;
         first = false;
+    }
+    for (int i=0; i<(int)_waypoints.size(); i++) {
+        _waypoints[i].pose.orientation = wps.poses[i].orientation;
     }
         
     _has_valid_traj = true;

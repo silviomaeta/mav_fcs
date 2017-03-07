@@ -10,7 +10,7 @@
 #include <tf/tf.h>
 #include "dji_sdk/Gimbal.h"
 
-//#include "dji_inspect_ctrl/pid_msgs.h"
+#include "dji_inspect_ctrl/pid_msgs.h"
 //#include "trajectory_control/Command.h"
 //#include "queue"
 
@@ -112,7 +112,7 @@ private:
     // Compute desired roll, pitch, yaw-velocity, z-velocity
     double _roll, _pitch, _yaw_rate, _z_rate;
     
-    //dji_inspect_ctrl::pid_msgs _pid_msg;
+    dji_inspect_ctrl::pid_msgs _pid_msg;
 
     //bool _DEBUG, _USE_DJI_VEL;
     double _YAW_OFFSET;
