@@ -96,7 +96,7 @@ void CopterInterface::terminate(void) {
 }
 
 bool CopterInterface::isEngaged(void) {
-  bool activation = g_drone->activation;
+  bool activation = _is_initialized;//g_drone->activation;
 // rmh 2.3 bool control = g_drone->sdk_permission_opened;
   // New in 3.1. Request API control and check if it was granted
   int control = 1;
@@ -195,7 +195,7 @@ int CopterInterface::getBatteryLevel(void) {
 std::string CopterInterface::getStatusDescriptionStr(void) {
   std::string str;
   str = std::string("[CopterInterface - DJI] Status: ");
-  bool active = g_drone->sdk_permission_opened;
+  bool active = _is_initialized;
   // rmh 2.3 int control = g_drone->sdk_permission_opened;
   // New in 3.1. Request API control and check if it was granted
   int control = 1;

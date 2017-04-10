@@ -22,6 +22,7 @@
 #include <tf/transform_listener.h>
 
 #include <ca_nav_msgs/PathXYZVPsi.h>
+#include <geometry_msgs/PoseArray.h>
 #include <mav_gcs_msgs/FCSStatus.h>
 #include <mav_gcs_msgs/UserCmd.h>
 
@@ -66,14 +67,25 @@ public:
     _has_path_msg = true;
   }
 
+  void setWaypoints(const geometry_msgs::PoseArray &msg) {
+    _waypoints_msg = msg;
+    _has_waypoints_msg = true;
+  }
+  
   ca_nav_msgs::PathXYZVPsi getPath(void)
   {
     _has_path_msg = false;
     return _path_msg;
   }
-
+  
+  geometry_msgs::PoseArray getWaypoints(void)
+  {
+    _has_waypoints_msg = false;
+    return _waypoints_msg;
+  }
+  
   bool hasPath(void) { return _has_path_msg; }
-
+  bool hasWaypoints(void) { return _has_waypoints_msg; }
 
 
   void setUserCmd(const mav_gcs_msgs::UserCmd::ConstPtr cmd_msg)
@@ -127,7 +139,8 @@ private:
 
   ca_nav_msgs::PathXYZVPsi _path_msg;
   bool _has_path_msg;
-
+  geometry_msgs::PoseArray _waypoints_msg;
+  bool _has_waypoints_msg;
   mav_gcs_msgs::UserCmd _user_cmd_msg;
   bool _has_user_cmd_msg;
 

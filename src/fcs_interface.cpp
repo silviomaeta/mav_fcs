@@ -31,6 +31,7 @@ using namespace mavfcs;
     
     _has_odometry_msg = false;
     _has_path_msg = false;
+    _has_waypoints_msg = false;
     _has_user_cmd_msg = false;
       
     _on_ground = true;

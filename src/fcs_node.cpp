@@ -72,7 +72,11 @@ int main(int argc, char ** argv)
   //Subscribe to path waypoints (world frame)
   ros::Subscriber path_sub = pnh.subscribe(
       "path", 10, &FcsInterface::setPath, &fcsint);
-  
+
+  //Subscribe to waypoints with full pose info
+  ros::Subscriber wp_sub = pnh.subscribe(
+      "/inspection_plan", 10, &FcsInterface::setWaypoints, &fcsint);
+
   //Subscribe to user commands (takeoff / land / start / stop / pause / resume)
   ros::Subscriber cmd_sub = pnh.subscribe(
       "user_cmd", 10, &FcsInterface::setUserCmd, &fcsint);

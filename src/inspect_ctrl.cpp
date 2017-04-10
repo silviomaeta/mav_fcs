@@ -198,10 +198,10 @@ void DjiInspectCtrl::publish_cmd() {
     marker.pose.position.x = _t_pos.x();
     marker.pose.position.y = _t_pos.y();
     marker.pose.position.z = _t_pos.z();
-    marker.pose.orientation.x = _gt_quat.x();
-    marker.pose.orientation.y = _gt_quat.y();
-    marker.pose.orientation.z = _gt_quat.z();
-    marker.pose.orientation.w = _gt_quat.w();
+    marker.pose.orientation.x = _t_quat.x();
+    marker.pose.orientation.y = _t_quat.y();
+    marker.pose.orientation.z = _t_quat.z();
+    marker.pose.orientation.w = _t_quat.w();
     marker.scale.x = 0.4;
     marker.scale.y = 0.04;
     marker.scale.z = 0.04;

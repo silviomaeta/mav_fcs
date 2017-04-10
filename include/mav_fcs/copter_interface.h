@@ -15,6 +15,19 @@
 
 #include <nav_msgs/Odometry.h>
 
+#define HORIZ_ATT 0x00
+#define HORIZ_VEL 0x40
+#define HORIZ_POS 0x80
+#define VERT_VEL 0x00
+#define VERT_POS 0x10
+#define VERT_TRU 0x20
+#define YAW_ANG 0x00
+#define YAW_RATE 0x08
+#define HORIZ_GND 0x00
+#define HORIZ_BODY 0x02
+#define YAW_GND 0x00
+#define YAW_BODY 0x01
+
 namespace mavfcs {
 
 enum FlightState {
