@@ -1,7 +1,9 @@
 /*
- * speed_control.h
- * Author: Carnegie Mellon University / Silvio Maeta
- */
+* Copyright (c) 2016 Carnegie Mellon University, Silvio Maeta <smaeta@andrew.cmu.edu>
+*
+* For License information please see the LICENSE file in the root directory.
+*
+*/
 
 #ifndef _MAV_FCS_SPEED_CONTROL_H_
 #define _MAV_FCS_SPEED_CONTROL_H_

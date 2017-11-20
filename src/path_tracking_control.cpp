@@ -1,7 +1,10 @@
 /*
- * path_tracking_control.cpp
- * Author: Carnegie Mellon University / Sanjiban Chowdury
- */
+* Copyright (c) 2016 Carnegie Mellon University, Sanjiban Chowdury <sanjibac@andrew.cmu.edu>
+*
+* For License information please see the LICENSE file in the root directory.
+*
+*/
+
 
 #include <vector>
 

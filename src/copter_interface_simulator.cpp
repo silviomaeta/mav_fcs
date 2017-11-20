@@ -1,12 +1,9 @@
-/**
- * @file   copter_interface.cpp
- * @author Silvio Maeta
- * @date   04/28/2016
- * @brief  Interface with copter onboard system - modify to support different copter model
- *
- * @copyright
- * Copyright (C) 2016.
- */
+/*
+* Copyright (c) 2016 Carnegie Mellon University, Silvio Maeta <smaeta@andrew.cmu.edu>
+*
+* For License information please see the LICENSE file in the root directory.
+*
+*/
 
 #include <limits>
 #include <math.h>

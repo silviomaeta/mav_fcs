@@ -1,7 +1,9 @@
 /*
- * fcs_state_machine.cpp
- * Author: Silvio Maeta
- */
+* Copyright (c) 2016 Carnegie Mellon University, Silvio Maeta <smaeta@andrew.cmu.edu>
+*
+* For License information please see the LICENSE file in the root directory.
+*
+*/
 
 #include "mav_fcs/fcs_state_machine.h"
 

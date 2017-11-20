@@ -1,12 +1,9 @@
-/**
- * @file   fcs_interface.cpp
- * @author Silvio Maeta
- * @date   04/24/2016
- * @brief  
- *
- * @copyright
- * Copyright (C) 2016.
- */
+/*
+* Copyright (c) 2016 Carnegie Mellon University, Silvio Maeta <smaeta@andrew.cmu.edu>
+*
+* For License information please see the LICENSE file in the root directory.
+*
+*/
 
 #ifndef _MAV_FCS_INTERFACE_H_
 #define _MAV_FCS_INTERFACE_H_

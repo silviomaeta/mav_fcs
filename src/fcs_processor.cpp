@@ -1,12 +1,9 @@
-/**
- * @file   fcs_processor.cpp
- * @author Silvio Maeta
- * @date   04/27/2016
- * @brief  
- *
- * @copyright
- * Copyright (C) 2016.
- */
+/*
+* Copyright (c) 2016 Carnegie Mellon University, Silvio Maeta <smaeta@andrew.cmu.edu>
+*
+* For License information please see the LICENSE file in the root directory.
+*
+*/
 
 #include <tf/tf.h>
 #include <tf/transform_listener.h>

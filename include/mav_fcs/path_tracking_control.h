@@ -1,7 +1,9 @@
 /*
- * path_tracking_control.h
- * Author: Carnegie Mellon University / Sanjiban Chowdury
- */
+* Copyright (c) 2016 Carnegie Mellon University, Silvio Maeta <smaeta@andrew.cmu.edu>
+*
+* For License information please see the LICENSE file in the root directory.
+*
+*/
 
 #ifndef _MAV_FCS_PATH_TRACKING_CONTROL_H_
 #define _MAV_FCS_PATH_TRACKING_CONTROL_H_
